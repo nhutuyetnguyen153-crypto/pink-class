@@ -36,6 +36,7 @@ body:not(.authenticated) .app{display:none}
 .auth-card button{width:100%;margin-top:17px;padding:12px;border:0;border-radius:12px;background:#e98eae;color:white;font-weight:750}
 .auth-message{font-size:12px;color:#b45e7f;margin-top:12px;min-height:18px;text-align:center}
 .signout-btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:#9b6a7e;font-size:12px;font-weight:700}
+.student-actions{display:flex;gap:7px;white-space:nowrap}.student-actions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;color:#806f78;font-size:12px;font-weight:700}.student-actions .danger{color:#b45e7f}.student-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.student-form-grid .full{grid-column:1/-1}.student-form-grid label{display:block;font-size:12px;font-weight:700;color:#806f78;margin-bottom:5px}.student-form-grid input,.student-form-grid select,.student-form-grid textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:#fffafd;color:var(--ink)}.student-form-grid textarea{min-height:76px;resize:vertical}@media(max-width:600px){.student-form-grid{grid-template-columns:1fr}.student-form-grid .full{grid-column:auto}}
 
 </style>
 </head>
@@ -102,16 +103,11 @@ body:not(.authenticated) .app{display:none}
   </section>
 
   <section class="page" id="page-students">
-    <div class="notice">Dữ liệu học sinh bên dưới chỉ để xem thử giao diện. Chức năng tạo tài khoản thật sẽ được kết nối ở giai đoạn Firebase.</div>
-    <div class="toolbar"><div><h3>Danh sách học sinh</h3><div class="sub">Quản lý hồ sơ và tiến độ học tập</div></div><button class="primary" id="addStudent">＋ Thêm học sinh</button></div>
-    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Điểm</th><th>Streak</th><th>Hoàn thành</th><th>Trạng thái</th></tr></thead><tbody>
-      <tr><td>An Nguyễn</td><td>120</td><td>🔥 7 ngày</td><td>92%</td><td><span class="tag">Đang học</span></td></tr>
-      <tr><td>Minh Trần</td><td>105</td><td>🔥 5 ngày</td><td>88%</td><td><span class="tag">Đang học</span></td></tr>
-      <tr><td>Hà Lê</td><td>90</td><td>🔥 4 ngày</td><td>80%</td><td><span class="tag">Đang học</span></td></tr>
-      <tr><td>Nam Phạm</td><td>75</td><td>🔥 2 ngày</td><td>76%</td><td><span class="tag">Đang học</span></td></tr>
-      <tr><td>Vy Đỗ</td><td>60</td><td>🔥 1 ngày</td><td>70%</td><td><span class="tag">Đang học</span></td></tr>
-      <tr><td>Long Bùi</td><td>45</td><td>—</td><td>55%</td><td><span class="tag wait">Cần theo dõi</span></td></tr>
-    </tbody></table></div>
+    <div class="notice">Hồ sơ học sinh được lưu trong Firestore và chỉ giáo viên sở hữu hồ sơ mới được quản lý. Tạo hồ sơ ở đây chưa tạo tài khoản đăng nhập cho học sinh.</div>
+    <div class="toolbar"><div><h3>Danh sách học sinh</h3><div class="sub">Thêm, tìm kiếm, chỉnh sửa và lưu hồ sơ học sinh</div></div><button class="primary" id="addStudent" type="button">＋ Thêm học sinh</button></div>
+    <div class="card" style="padding:14px;margin-bottom:16px"><input id="studentSearch" type="search" placeholder="Tìm theo tên, email hoặc lớp..." aria-label="Tìm học sinh" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:#fffafd;color:var(--ink)"></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Email</th><th>Lớp</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="studentsTableBody"><tr><td colspan="5">Đang tải danh sách...</td></tr></tbody></table></div>
+    <div class="sub" id="studentsCount" style="margin-top:10px">Đang kết nối dữ liệu...</div>
   </section>
 
   <section class="page" id="page-vocabulary">
@@ -154,6 +150,7 @@ body:not(.authenticated) .app{display:none}
   </section>
 </main>
 </div>
+<div class="modal-backdrop" id="studentModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle"><h3 id="studentModalTitle">Thêm học sinh</h3><form id="studentForm"><div class="student-form-grid"><div class="full"><label for="studentName">Họ và tên *</label><input id="studentName" maxlength="100" required placeholder="Ví dụ: Nguyễn Minh Anh"></div><div><label for="studentEmail">Email (không bắt buộc)</label><input id="studentEmail" type="email" maxlength="160" placeholder="student@example.com"></div><div><label for="studentClass">Lớp</label><input id="studentClass" maxlength="60" placeholder="Ví dụ: Pink 01"></div><div class="full"><label for="studentStatus">Trạng thái</label><select id="studentStatus"><option value="active">Đang học</option><option value="paused">Tạm nghỉ</option></select></div><div class="full"><label for="studentNotes">Ghi chú</label><textarea id="studentNotes" maxlength="1000" placeholder="Ghi chú dành cho giáo viên"></textarea></div></div><div class="modal-actions"><button class="secondary" id="cancelStudent" type="button">Hủy</button><button class="primary" id="saveStudent" type="submit">Lưu hồ sơ</button></div><div class="auth-message" id="studentFormMessage" role="status"></div></form></div></div>
 <div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">Tạo mới</h3><div class="field"><label id="fieldLabel">Tên</label><input id="modalInput" placeholder="Nhập thông tin"></div><div class="modal-actions"><button class="secondary" id="cancelModal">Hủy</button><button class="primary" id="saveModal">Lưu bản nháp</button></div></div></div>
 <div class="toast" id="toast">Đây là bản xem trước — dữ liệu chưa được lưu.</div>
 
@@ -219,13 +216,14 @@ auth.onAuthStateChanged(async (user) => {
     }
     document.body.classList.add('authenticated');
     authScreen.style.display = 'none';
+    startStudentsListener(user.uid);
   } catch (error) {
     await auth.signOut();
     authMessage.textContent = 'Không thể xác minh quyền. Kiểm tra kết nối và Firestore Rules.';
   }
 });
 
-document.getElementById('signOutBtn').addEventListener('click', async () => {
+document.getElementById('signOutBtn').addEventListener('click',()=>{stopStudentsListener();auth.signOut()});
   await auth.signOut();
 });
 
@@ -236,13 +234,111 @@ document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=
 document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('show'));
 const modal=document.getElementById('modal'),input=document.getElementById('modalInput'),toast=document.getElementById('toast');
 function openModal(title,label){document.getElementById('modalTitle').textContent=title;document.getElementById('fieldLabel').textContent=label;input.value='';modal.classList.add('open');input.focus()}
-document.getElementById('addStudent').onclick=()=>openModal('Thêm học sinh','Tên học sinh');
+// Student records are managed by the Firestore-backed form below.
 document.getElementById('addVocab').onclick=()=>openModal('Tạo bộ từ vựng','Tên bài học hoặc bộ từ');
 document.getElementById('addGrammar').onclick=()=>openModal('Giao bài tập','Tên bài tập');
 document.getElementById('cancelModal').onclick=()=>modal.classList.remove('open');
 document.getElementById('saveModal').onclick=()=>{modal.classList.remove('open');showToast('Bản xem trước chưa lưu dữ liệu. Chức năng này sẽ được kết nối sau.')};
 ['scoreHistory','submissionFilter','exportDemo'].forEach(id=>document.getElementById(id).addEventListener('click',()=>showToast('Chức năng sẽ được hoàn thiện ở giai đoạn tiếp theo.')));
 function showToast(message){toast.textContent=message;toast.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.style.display='none',2800)}
+let currentTeacherUid = null;
+let studentsUnsubscribe = null;
+let studentRecords = [];
+let editingStudentId = null;
+const studentModal = document.getElementById('studentModal');
+const studentForm = document.getElementById('studentForm');
+const studentFormMessage = document.getElementById('studentFormMessage');
+const studentSaveButton = document.getElementById('saveStudent');
+const studentsTableBody = document.getElementById('studentsTableBody');
+const studentSearch = document.getElementById('studentSearch');
+
+function stopStudentsListener(){
+  if(studentsUnsubscribe){studentsUnsubscribe();studentsUnsubscribe=null;}
+  currentTeacherUid=null;
+  studentRecords=[];
+}
+function renderStudents(){
+  const query=(studentSearch.value||'').trim().toLocaleLowerCase('vi');
+  const filtered=studentRecords.filter(student=>{
+    const haystack=[student.name,student.email,student.className].join(' ').toLocaleLowerCase('vi');
+    return haystack.includes(query);
+  });
+  studentsTableBody.textContent='';
+  if(!filtered.length){
+    const row=document.createElement('tr'),cell=document.createElement('td');
+    cell.colSpan=5;cell.textContent=studentRecords.length?'Không tìm thấy học sinh phù hợp.':'Chưa có hồ sơ học sinh. Nhấn “Thêm học sinh” để tạo hồ sơ đầu tiên.';
+    row.appendChild(cell);studentsTableBody.appendChild(row);
+  }else{
+    filtered.forEach(student=>{
+      const row=document.createElement('tr');
+      const name=document.createElement('td');name.textContent=student.name||'Chưa có tên';
+      const email=document.createElement('td');email.textContent=student.email||'—';
+      const klass=document.createElement('td');klass.textContent=student.className||'—';
+      const status=document.createElement('td');const tag=document.createElement('span');tag.className='tag'+(student.status==='paused'?' wait':'');tag.textContent=student.status==='paused'?'Tạm nghỉ':'Đang học';status.appendChild(tag);
+      const actions=document.createElement('td');const wrap=document.createElement('div');wrap.className='student-actions';
+      const edit=document.createElement('button');edit.type='button';edit.textContent='Sửa';edit.addEventListener('click',()=>openStudentForm(student));
+      const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='Xóa';remove.addEventListener('click',()=>deleteStudent(student));
+      wrap.append(edit,remove);actions.appendChild(wrap);row.append(name,email,klass,status,actions);studentsTableBody.appendChild(row);
+    });
+  }
+  document.getElementById('studentsCount').textContent=filtered.length+' / '+studentRecords.length+' hồ sơ';
+}
+function startStudentsListener(uid){
+  stopStudentsListener();currentTeacherUid=uid;
+  studentsTableBody.innerHTML='<tr><td colspan="5">Đang tải danh sách...</td></tr>';
+  studentsUnsubscribe=db.collection('students').where('teacherUid','==',uid).onSnapshot(snapshot=>{
+    studentRecords=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>{
+      const at=a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0;
+      const bt=b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0;return bt-at;
+    });
+    renderStudents();
+  },error=>{
+    studentsTableBody.innerHTML='<tr><td colspan="5">Không tải được hồ sơ. Hãy kiểm tra Firestore Rules đã được cập nhật.</td></tr>';
+    document.getElementById('studentsCount').textContent='Lỗi đọc dữ liệu: '+error.code;
+  });
+}
+function openStudentForm(student){
+  editingStudentId=student?student.id:null;
+  document.getElementById('studentModalTitle').textContent=student?'Chỉnh sửa hồ sơ':'Thêm học sinh';
+  document.getElementById('studentName').value=student?.name||'';
+  document.getElementById('studentEmail').value=student?.email||'';
+  document.getElementById('studentClass').value=student?.className||'';
+  document.getElementById('studentStatus').value=student?.status||'active';
+  document.getElementById('studentNotes').value=student?.notes||'';
+  studentFormMessage.textContent='';
+  studentSaveButton.disabled=false;studentSaveButton.textContent='Lưu hồ sơ';
+  studentModal.classList.add('open');document.getElementById('studentName').focus();
+}
+async function deleteStudent(student){
+  if(!currentTeacherUid||!confirm('Xóa hồ sơ '+student.name+'? Thao tác này không thể hoàn tác.'))return;
+  try{await db.collection('students').doc(student.id).delete();showToast('Đã xóa hồ sơ học sinh.');}
+  catch(error){showToast('Không thể xóa hồ sơ: '+error.code);}
+}
+document.getElementById('addStudent').addEventListener('click',()=>openStudentForm(null));
+document.getElementById('cancelStudent').addEventListener('click',()=>studentModal.classList.remove('open'));
+studentModal.addEventListener('click',event=>{if(event.target===studentModal)studentModal.classList.remove('open')});
+studentSearch.addEventListener('input',renderStudents);
+studentForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!currentTeacherUid){studentFormMessage.textContent='Bạn cần đăng nhập bằng tài khoản giáo viên.';return;}
+  const name=document.getElementById('studentName').value.trim();
+  const email=document.getElementById('studentEmail').value.trim();
+  const className=document.getElementById('studentClass').value.trim();
+  const status=document.getElementById('studentStatus').value;
+  const notes=document.getElementById('studentNotes').value.trim();
+  if(!name){studentFormMessage.textContent='Vui lòng nhập họ tên học sinh.';return;}
+  studentSaveButton.disabled=true;studentSaveButton.textContent='Đang lưu...';studentFormMessage.textContent='';
+  const payload={name,email,className,status,notes,teacherUid:currentTeacherUid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  try{
+    if(editingStudentId){await db.collection('students').doc(editingStudentId).update(payload);}
+    else{payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('students').add(payload);}
+    studentModal.classList.remove('open');studentForm.reset();showToast(editingStudentId?'Đã cập nhật hồ sơ.':'Đã thêm học sinh.');
+  }catch(error){
+    studentFormMessage.textContent='Không lưu được hồ sơ ('+error.code+'). Kiểm tra Firestore Rules.';
+  }finally{studentSaveButton.disabled=false;studentSaveButton.textContent='Lưu hồ sơ';}
+});
+studentModal.addEventListener('keydown',event=>{if(event.key==='Escape')studentModal.classList.remove('open')});
+
 modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
 </script>
 </body>
