@@ -206,7 +206,7 @@ auth.onAuthStateChanged(async (user) => {
   document.body.classList.remove('authenticated');
   authScreen.style.display = 'grid';
   if (!user) {
-    authMessage.textContent = '';
+    // Keep a useful sign-in error visible after a rejected login or role check.
     return;
   }
   authMessage.textContent = 'Đang xác minh quyền giáo viên...';
