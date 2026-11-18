@@ -206,7 +206,8 @@ auth.onAuthStateChanged(async (user) => {
     }
     document.body.classList.add('authenticated');
     authScreen.style.display = 'none';
-    startStudentsListener(user.uid);\n    startDataListeners();
+    startStudentsListener(user.uid);
+    startDataListeners();
   } catch (error) {
     await auth.signOut();
     authMessage.textContent = 'Không thể xác minh quyền. Kiểm tra kết nối và Firestore Rules.';
@@ -328,7 +329,8 @@ studentForm.addEventListener('submit',async event=>{
 });
 studentModal.addEventListener('keydown',event=>{if(event.key==='Escape')studentModal.classList.remove('open')});
 
-modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});\n
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+
 let dataUnsubs=[];
 let vocabRecords=[], assignmentRecords=[], submissionRecords=[];
 const cloudinaryCloud='mqqzw5ot', cloudinaryPreset='pink-class-submissions';
