@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fff5f8">
+<title>Pink Class — Student Learning Tracker</title>
+<style>
+:root{--pink:#e98eae;--pink2:#f7c6d7;--pink3:#fff0f5;--ink:#493b43;--muted:#988991;--line:#f1e4e9;--bg:#fff9fb;--white:#fff;--green:#62a88a;--orange:#d69a54;--shadow:0 8px 28px rgba(112,67,86,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:248px 1fr}
+.sidebar{background:#fff;border-right:1px solid var(--line);padding:24px 16px;display:flex;flex-direction:column;gap:24px}
+.brand{display:flex;align-items:center;gap:11px;padding:0 10px}.logo{width:42px;height:42px;border-radius:15px;background:linear-gradient(145deg,#f8c9d9,#e98eae);display:grid;place-items:center;color:white;font-size:22px;box-shadow:0 6px 14px #e98eae55}.brand b{font-size:19px;letter-spacing:.2px}.brand small{display:block;color:var(--muted);font-size:11px}
+.nav-label{font-size:10px;font-weight:800;letter-spacing:1.3px;color:#b4a5ad;padding:0 12px;margin:4px 0 8px}.nav{display:grid;gap:5px}.nav button{border:0;background:transparent;text-align:left;color:#796b73;padding:11px 13px;border-radius:12px;display:flex;align-items:center;gap:12px;font-weight:600}.nav button .ico{width:20px;text-align:center;font-size:17px}.nav button.active,.nav button:hover{background:var(--pink3);color:#bf6688}.side-note{margin-top:auto;background:#fff5f8;border:1px solid #f7e2ea;border-radius:16px;padding:14px;font-size:12px;color:#8f7883}.side-note b{display:block;color:#b96d8b;margin-bottom:4px}
+main{min-width:0;padding:25px clamp(16px,3vw,38px) 40px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px}.eyebrow{font-size:12px;color:var(--muted);margin-bottom:3px}.topbar h1{font-size:25px;margin:0;letter-spacing:-.5px}.top-actions{display:flex;align-items:center;gap:10px}.pill{background:white;border:1px solid var(--line);border-radius:999px;padding:9px 13px;color:#806f78;font-size:12px}.avatar{width:38px;height:38px;border-radius:50%;background:#f9dce6;color:#a85476;display:grid;place-items:center;font-weight:800}
+.welcome{background:linear-gradient(110deg,#fce5ed,#fff1f5 65%,#fff9fb);border:1px solid #f6dce6;border-radius:20px;padding:23px 25px;display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px}.welcome h2{margin:0 0 5px;font-size:21px}.welcome p{margin:0;color:#947e89;font-size:13px}.welcome .flower{font-size:44px;opacity:.8}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.card,.stat{background:white;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow)}.stat{padding:17px}.stat-head{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}.stat-icon{width:34px;height:34px;border-radius:11px;background:var(--pink3);display:grid;place-items:center;font-size:17px}.stat strong{display:block;font-size:27px;margin-top:10px;letter-spacing:-.7px}.stat small{color:#a4949c;font-size:11px}
+.content-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(270px,1fr);gap:16px}.card{padding:19px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}.card h3{font-size:15px;margin:0}.sub{font-size:11px;color:var(--muted)}.linkbtn{border:0;background:transparent;color:#c16f90;font-weight:700;font-size:12px}
+.task{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #f6edf0}.task:first-of-type{border-top:0}.task-icon{width:39px;height:39px;border-radius:13px;background:#fff1f5;display:grid;place-items:center;font-size:18px;flex:none}.task-info{min-width:0;flex:1}.task-info b{display:block;font-size:13px}.task-info small{color:var(--muted);font-size:11px}.tag{font-size:10px;font-weight:700;border-radius:999px;padding:5px 9px;white-space:nowrap;background:#f1f8f4;color:#579675}.tag.wait{background:#fff5e9;color:#b88442}.tag.late{background:#fff0f0;color:#c76c72}
+.student{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #f6edf0}.student:first-of-type{border-top:0}.student-avatar{width:34px;height:34px;border-radius:12px;background:#fce8ef;color:#b96c8a;display:grid;place-items:center;font-weight:800;font-size:12px}.student-info{flex:1}.student-info b{font-size:12px;display:block}.student-info small{font-size:10px;color:var(--muted)}.score{font-weight:800;color:#b96c8a;font-size:13px}
+.progress-wrap{margin-top:15px}.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:7px}.progress{height:8px;border-radius:20px;background:#f7edf1;overflow:hidden}.progress span{display:block;height:100%;width:72%;background:linear-gradient(90deg,#f3b5ca,#e98eae);border-radius:20px}
+.page{display:none}.page.active{display:block}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}.primary{background:#e98eae;color:white;border:0;border-radius:12px;padding:10px 15px;font-weight:700;box-shadow:0 5px 12px #e98eae44}.secondary{background:white;color:#9b6a7e;border:1px solid var(--line);border-radius:12px;padding:9px 13px;font-weight:650}.table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;min-width:530px}.data-table th,.data-table td{text-align:left;padding:12px 10px;border-bottom:1px solid #f4ebef;font-size:12px}.data-table th{color:#a08f98;font-size:10px;letter-spacing:.7px;text-transform:uppercase}.empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}.notice{background:#fff8ed;border:1px solid #f5e6c9;color:#94794e;padding:12px 14px;border-radius:12px;font-size:12px;margin-bottom:16px}
+.modal-backdrop{display:none;position:fixed;inset:0;background:#38232d66;z-index:10;align-items:center;justify-content:center;padding:18px}.modal-backdrop.open{display:flex}.modal{background:white;border-radius:19px;padding:22px;width:min(440px,100%);box-shadow:0 20px 70px #38232d33}.modal h3{margin:0 0 15px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:12px;font-weight:700;color:#806f78}.field input,.field select{border:1px solid var(--line);border-radius:10px;padding:11px;background:#fffafd;color:var(--ink);width:100%}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#493b43;color:white;border-radius:999px;padding:10px 16px;font-size:12px;display:none;z-index:20}
+.mobile-menu{display:none;border:1px solid var(--line);background:white;border-radius:10px;padding:8px 10px}
+@media(max-width:900px){.app{grid-template-columns:205px 1fr}.stats{grid-template-columns:repeat(2,1fr)}.content-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.app{display:block}.sidebar{display:none;position:fixed;z-index:8;inset:0 auto 0 0;width:260px;box-shadow:10px 0 35px #53334422}.sidebar.show{display:flex}main{padding:17px 14px 30px}.mobile-menu{display:inline-block}.topbar{align-items:flex-start}.topbar h1{font-size:21px}.top-actions .pill{display:none}.welcome{padding:18px}.welcome .flower{font-size:34px}.stats{gap:9px}.stat{padding:13px}.stat strong{font-size:23px}.card{padding:15px}.task{align-items:flex-start}.task .tag{margin-top:3px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="logo">✿</div><div><b>Pink Class</b><small>LEARN · GROW · SHINE</small></div></div>
+  <div>
+    <div class="nav-label">WORKSPACE</div>
+    <nav class="nav">
+      <button class="active" data-page="dashboard"><span class="ico">⌂</span> Tổng quan</button>
+      <button data-page="students"><span class="ico">♡</span> Học sinh</button>
+      <button data-page="vocabulary"><span class="ico">✎</span> Ôn từ vựng</button>
+      <button data-page="grammar"><span class="ico">▤</span> Bài tập ngữ pháp</button>
+      <button data-page="submissions"><span class="ico">▧</span> Bài nộp</button>
+      <button data-page="scores"><span class="ico">☆</span> Điểm & streak</button>
+      <button data-page="reports"><span class="ico">▥</span> Báo cáo</button>
+    </nav>
+  </div>
+  <div class="side-note"><b>🌷 Pink Class preview</b>Đây là bản giao diện thử nghiệm. Dữ liệu hiện tại chỉ là dữ liệu minh họa, chưa kết nối máy chủ.</div>
+</aside>
+<main>
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:10px"><button class="mobile-menu" id="menuBtn">☰</button><div><div class="eyebrow">THỨ TƯ, 19 THÁNG 11, 2026</div><h1 id="pageTitle">Tổng quan lớp học</h1></div></div>
+    <div class="top-actions"><span class="pill">🌸 Giáo viên</span><div class="avatar">T</div></div>
+  </header>
+
+  <section class="page active" id="page-dashboard">
+    <div class="welcome"><div><h2>Chào cô giáo! 🌸</h2><p>Mỗi bước tiến nhỏ hôm nay tạo nên thành công ngày mai.</p></div><div class="flower">🌷</div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-head"><span>Học sinh</span><span class="stat-icon">👩🏻‍🎓</span></div><strong>06</strong><small>Đang theo học</small></div>
+      <div class="stat"><div class="stat-head"><span>Nhiệm vụ</span><span class="stat-icon">📚</span></div><strong>18</strong><small>Trong tháng này</small></div>
+      <div class="stat"><div class="stat-head"><span>Chờ chấm</span><span class="stat-icon">📝</span></div><strong>03</strong><small>Cần xem bài nộp</small></div>
+      <div class="stat"><div class="stat-head"><span>Hoàn thành</span><span class="stat-icon">✨</span></div><strong>84%</strong><small>Tỷ lệ hoàn thành tuần</small></div>
+    </div>
+    <div class="content-grid">
+      <div class="card"><div class="card-head"><div><h3>Nhiệm vụ gần đây</h3><div class="sub">Theo dõi tình hình bài tập của lớp</div></div><button class="linkbtn" data-go="grammar">Xem tất cả →</button></div>
+        <div class="task"><div class="task-icon">📖</div><div class="task-info"><b>Unit 5 — Vocabulary review</b><small>Ôn từ vựng · Hạn 20/11/2026</small></div><span class="tag">Đang thực hiện</span></div>
+        <div class="task"><div class="task-icon">✍️</div><div class="task-info"><b>Past Simple Exercises</b><small>Ngữ pháp · Hạn 19/11/2026</small></div><span class="tag wait">Chờ nộp</span></div>
+        <div class="task"><div class="task-icon">🧩</div><div class="task-info"><b>Irregular verbs practice</b><small>Ôn từ vựng · Hạn 18/11/2026</small></div><span class="tag late">Quá hạn</span></div>
+      </div>
+      <div class="card"><div class="card-head"><div><h3>Học sinh nổi bật</h3><div class="sub">Điểm tích lũy minh họa</div></div><button class="linkbtn" data-go="scores">Bảng điểm →</button></div>
+        <div class="student"><div class="student-avatar">AN</div><div class="student-info"><b>An Nguyễn</b><small>🔥 7 ngày streak</small></div><span class="score">120 điểm</span></div>
+        <div class="student"><div class="student-avatar">MI</div><div class="student-info"><b>Minh Trần</b><small>🔥 5 ngày streak</small></div><span class="score">105 điểm</span></div>
+        <div class="student"><div class="student-avatar">HA</div><div class="student-info"><b>Hà Lê</b><small>🔥 4 ngày streak</small></div><span class="score">90 điểm</span></div>
+        <div class="progress-wrap"><div class="progress-label"><span>Tiến độ chung tuần này</span><b>72%</b></div><div class="progress"><span></span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="page-students">
+    <div class="notice">Dữ liệu học sinh bên dưới chỉ để xem thử giao diện. Chức năng tạo tài khoản thật sẽ được kết nối ở giai đoạn Firebase.</div>
+    <div class="toolbar"><div><h3>Danh sách học sinh</h3><div class="sub">Quản lý hồ sơ và tiến độ học tập</div></div><button class="primary" id="addStudent">＋ Thêm học sinh</button></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Điểm</th><th>Streak</th><th>Hoàn thành</th><th>Trạng thái</th></tr></thead><tbody>
+      <tr><td>An Nguyễn</td><td>120</td><td>🔥 7 ngày</td><td>92%</td><td><span class="tag">Đang học</span></td></tr>
+      <tr><td>Minh Trần</td><td>105</td><td>🔥 5 ngày</td><td>88%</td><td><span class="tag">Đang học</span></td></tr>
+      <tr><td>Hà Lê</td><td>90</td><td>🔥 4 ngày</td><td>80%</td><td><span class="tag">Đang học</span></td></tr>
+      <tr><td>Nam Phạm</td><td>75</td><td>🔥 2 ngày</td><td>76%</td><td><span class="tag">Đang học</span></td></tr>
+      <tr><td>Vy Đỗ</td><td>60</td><td>🔥 1 ngày</td><td>70%</td><td><span class="tag">Đang học</span></td></tr>
+      <tr><td>Long Bùi</td><td>45</td><td>—</td><td>55%</td><td><span class="tag wait">Cần theo dõi</span></td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="page" id="page-vocabulary">
+    <div class="notice">Lịch ôn tự động và đồng bộ giữa các thiết bị sẽ hoạt động sau khi kết nối Firestore.</div>
+    <div class="toolbar"><div><h3>Bộ từ vựng & lịch ôn</h3><div class="sub">Theo dõi các mốc ôn tập cách quãng</div></div><button class="primary" id="addVocab">＋ Tạo bộ từ</button></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Bộ từ vựng</th><th>Học sinh</th><th>Ngày bắt đầu</th><th>Lịch ôn</th><th>Tiến độ</th></tr></thead><tbody>
+    <tr><td>Unit 5 — Food & Health</td><td>6 học sinh</td><td>12/11/2026</td><td>3 · 5 · 7 · 14 · 30 ngày</td><td><span class="tag">3/5 lần</span></td></tr>
+    <tr><td>Unit 4 — Around Town</td><td>4 học sinh</td><td>08/11/2026</td><td>3 · 5 · 7 · 14 · 30 ngày</td><td><span class="tag wait">2/5 lần</span></td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="page" id="page-grammar">
+    <div class="notice">Nhiệm vụ ở đây là dữ liệu minh họa. Chưa gửi bài hoặc cộng/trừ điểm thật.</div>
+    <div class="toolbar"><div><h3>Bài tập ngữ pháp</h3><div class="sub">Giao bài, đặt hạn nộp và theo dõi hoàn thành</div></div><button class="primary" id="addGrammar">＋ Giao bài tập</button></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Tên bài tập</th><th>Giao cho</th><th>Hạn nộp</th><th>Đã nộp</th><th>Trạng thái</th></tr></thead><tbody>
+    <tr><td>Past Simple Exercises</td><td>Tất cả</td><td>19/11/2026</td><td>4/6</td><td><span class="tag wait">Đang chờ</span></td></tr>
+    <tr><td>Comparatives worksheet</td><td>4 học sinh</td><td>20/11/2026</td><td>3/4</td><td><span class="tag">Đang thực hiện</span></td></tr>
+    <tr><td>Present Continuous</td><td>Tất cả</td><td>17/11/2026</td><td>6/6</td><td><span class="tag">Hoàn thành</span></td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="page" id="page-submissions">
+    <div class="notice">Ảnh bài làm chưa được tải lên Cloudinary. Không có ảnh học sinh thật trong bản xem trước.</div>
+    <div class="toolbar"><div><h3>Bài nộp của học sinh</h3><div class="sub">Kiểm tra ảnh, thời gian nộp và nhận xét</div></div><button class="secondary" id="submissionFilter">Tất cả bài nộp⌄</button></div>
+    <div class="card"><div class="empty">📷<br><b>Chưa có bài nộp thật</b><br>Danh sách bài nộp sẽ xuất hiện tại đây sau khi kết nối Firebase và Cloudinary.</div></div>
+  </section>
+
+  <section class="page" id="page-scores">
+    <div class="notice">Điểm và streak hiện là số liệu minh họa. Quy tắc cộng/trừ điểm sẽ được bảo vệ bằng Firestore Rules và thiết kế dữ liệu chống xử lý trùng.</div>
+    <div class="toolbar"><div><h3>Điểm thưởng & streak</h3><div class="sub">Theo dõi động lực học tập của từng bạn</div></div><button class="secondary" id="scoreHistory">Lịch sử điểm</button></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Tổng điểm</th><th>Streak hiện tại</th><th>Streak cao nhất</th><th>Tiến độ</th></tr></thead><tbody>
+    <tr><td>An Nguyễn</td><td>120 ⭐</td><td>7 ngày 🔥</td><td>12 ngày</td><td>92%</td></tr><tr><td>Minh Trần</td><td>105 ⭐</td><td>5 ngày 🔥</td><td>9 ngày</td><td>88%</td></tr><tr><td>Hà Lê</td><td>90 ⭐</td><td>4 ngày 🔥</td><td>8 ngày</td><td>80%</td></tr><tr><td>Nam Phạm</td><td>75 ⭐</td><td>2 ngày 🔥</td><td>6 ngày</td><td>76%</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="page" id="page-reports">
+    <div class="toolbar"><div><h3>Báo cáo học tập</h3><div class="sub">Tổng hợp kết quả theo tuần</div></div><button class="primary" id="exportDemo">↓ Xuất Excel</button></div>
+    <div class="notice">Bản xem trước chưa có dữ liệu thật để xuất. Chức năng Excel sẽ lấy dữ liệu trực tiếp từ Firestore ở giai đoạn báo cáo.</div>
+    <div class="card"><div class="empty">📊<br><b>Báo cáo tuần</b><br>Biểu đồ và thống kê sẽ được hiển thị khi có dữ liệu học tập thật.</div></div>
+  </section>
+</main>
+</div>
+<div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">Tạo mới</h3><div class="field"><label id="fieldLabel">Tên</label><input id="modalInput" placeholder="Nhập thông tin"></div><div class="modal-actions"><button class="secondary" id="cancelModal">Hủy</button><button class="primary" id="saveModal">Lưu bản nháp</button></div></div></div>
+<div class="toast" id="toast">Đây là bản xem trước — dữ liệu chưa được lưu.</div>
+<script>
+const titles={dashboard:"Tổng quan lớp học",students:"Danh sách học sinh",vocabulary:"Ôn tập từ vựng",grammar:"Bài tập ngữ pháp",submissions:"Bài nộp",scores:"Điểm & streak",reports:"Báo cáo học tập"};
+function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));document.getElementById('pageTitle').textContent=titles[name];document.getElementById('sidebar').classList.remove('show');}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
+document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('show'));
+const modal=document.getElementById('modal'),input=document.getElementById('modalInput'),toast=document.getElementById('toast');
+function openModal(title,label){document.getElementById('modalTitle').textContent=title;document.getElementById('fieldLabel').textContent=label;input.value='';modal.classList.add('open');input.focus()}
+document.getElementById('addStudent').onclick=()=>openModal('Thêm học sinh','Tên học sinh');
+document.getElementById('addVocab').onclick=()=>openModal('Tạo bộ từ vựng','Tên bài học hoặc bộ từ');
+document.getElementById('addGrammar').onclick=()=>openModal('Giao bài tập','Tên bài tập');
+document.getElementById('cancelModal').onclick=()=>modal.classList.remove('open');
+document.getElementById('saveModal').onclick=()=>{modal.classList.remove('open');showToast('Bản xem trước chưa lưu dữ liệu. Chức năng này sẽ được kết nối sau.')};
+['scoreHistory','submissionFilter','exportDemo'].forEach(id=>document.getElementById(id).addEventListener('click',()=>showToast('Chức năng sẽ được hoàn thiện ở giai đoạn tiếp theo.')));
+function showToast(message){toast.textContent=message;toast.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.style.display='none',2800)}
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+</script>
+</body>
+</html>
