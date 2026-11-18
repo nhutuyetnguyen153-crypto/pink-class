@@ -298,6 +298,49 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
+    match /wheelSettings/{teacherId} {
+      allow read: if isTeacher() && request.auth.uid == teacherId || studentOfTeacher(teacherId);
+      allow create, update: if isTeacher() && request.auth.uid == teacherId
+        && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.prizes is list
+        && request.resource.data.prizes.size() > 0
+        && request.resource.data.prizes.size() <= 20
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isTeacher() && request.auth.uid == teacherId;
+    }
+    match /wheelRequests/{requestId} {
+      allow read: if (isTeacher() && resource.data.teacherUid == request.auth.uid)
+        || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn() && studentOwns(request.auth.uid)
+        && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','freeSpin','pointsBalance','status','requestedAt'])
+        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentName == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.name
+        && request.resource.data.freeSpin is bool
+        && ((request.resource.data.freeSpin == true && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.extraSpins > 0)
+          || (request.resource.data.freeSpin == false && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance >= 300))
+        && request.resource.data.status == 'pending'
+        && request.resource.data.requestedAt == request.time;
+      allow update: if isTeacher() && resource.data.teacherUid == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'completed'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','processedAt','prizeName'])
+        && request.resource.data.processedAt == request.time
+        && request.resource.data.prizeName is string;
+      allow delete: if false;
+    }
+    match /wheelSpins/{spinId} {
+      allow read: if (isTeacher() && resource.data.teacherUid == request.auth.uid)
+        || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if isTeacher() && owns(request.resource.data)
+        && request.resource.data.studentId is string
+        && request.resource.data.studentUid is string
+        && request.resource.data.prizeName is string
+        && request.resource.data.prizeType in ['gift','extra']
+        && request.resource.data.probability is number
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }
