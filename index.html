@@ -104,7 +104,7 @@ body:not(.authenticated) .app{display:none}
     <div class="notice">Hồ sơ học sinh được lưu trong Firestore và chỉ giáo viên sở hữu hồ sơ mới được quản lý. Tạo hồ sơ ở đây chưa tạo tài khoản đăng nhập cho học sinh.</div>
     <div class="toolbar"><div><h3>Danh sách học sinh</h3><div class="sub">Thêm, tìm kiếm, chỉnh sửa và lưu hồ sơ học sinh</div></div><button class="primary" id="addStudent" type="button">＋ Thêm học sinh</button></div>
     <div class="card" style="padding:14px;margin-bottom:16px"><input id="studentSearch" type="search" placeholder="Tìm theo tên, email hoặc lớp..." aria-label="Tìm học sinh" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:#f8fcff;color:var(--ink)"></div>
-    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Email</th><th>Lớp</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="studentsTableBody"><tr><td colspan="5">Đang tải danh sách...</td></tr></tbody></table></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Email</th><th>Lớp</th><th>Trạng thái</th><th>Điểm</th><th>Thao tác</th></tr></thead><tbody id="studentsTableBody"><tr><td colspan="6">Đang tải danh sách...</td></tr></tbody></table></div>
     <div class="sub" id="studentsCount" style="margin-top:10px">Đang kết nối dữ liệu...</div>
   </section>
 
@@ -344,6 +344,105 @@ studentForm.addEventListener('submit',async event=>{
 studentModal.addEventListener('keydown',event=>{if(event.key==='Escape')studentModal.classList.remove('open')});
 
 modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+
+
+/* Reward catalogue and student self-service portal */
+let rewardUnsubs=[], studentPortalUnsubs=[], activeStudentUid=null, activeStudentProfile=null;
+function stopRewardListeners(){rewardUnsubs.forEach(fn=>fn());rewardUnsubs=[];rewardRecords=[];redemptionRecords=[];}
+function startRewardListeners(){
+ stopRewardListeners();
+ rewardUnsubs.push(db.collection("rewards").where("teacherUid","==",currentTeacherUid).onSnapshot(s=>{rewardRecords=s.docs.map(d=>({id:d.id,...d.data()}));renderTeacherRewards();},e=>showToast("Không tải được kho quà: "+e.code)));
+ rewardUnsubs.push(db.collection("redemptions").where("teacherUid","==",currentTeacherUid).onSnapshot(s=>{redemptionRecords=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.requestedAt?.toMillis?.()||0)-(a.requestedAt?.toMillis?.()||0));renderRedemptions();},e=>showToast("Không tải được yêu cầu đổi quà: "+e.code)));
+}
+function renderTeacherRewards(){
+ const grid=document.getElementById("teacherRewardGrid");grid.textContent="";
+ if(!rewardRecords.length){grid.textContent="Chưa có quà. Nhấn “Thêm quà” để đăng ảnh đầu tiên.";return;}
+ rewardRecords.forEach(item=>{
+  const card=document.createElement("div");card.className="reward-card";
+  const img=document.createElement("img");img.src=item.imageData;img.alt=item.title;
+  const title=document.createElement("h4");title.textContent=item.title;
+  const cost=document.createElement("p");cost.textContent=Number(item.pointsCost)+" điểm";
+  const del=document.createElement("button");del.className="secondary";del.textContent="Xóa quà";
+  del.onclick=async()=>{if(!confirm("Xóa quà "+item.title+"?"))return;try{await db.collection("rewards").doc(item.id).delete();showToast("Đã xóa quà.");}catch(e){showToast("Không xóa được: "+e.code);}};
+  card.append(img,title,cost,del);grid.appendChild(card);
+ });
+}
+function renderRedemptions(){
+ const body=document.getElementById("redemptionsBody");body.textContent="";
+ if(!redemptionRecords.length){body.innerHTML='<tr><td colspan="5" class="empty">Chưa có yêu cầu đổi quà.</td></tr>';return;}
+ redemptionRecords.forEach(item=>{
+  const tr=document.createElement("tr");
+  [item.studentName||"Học sinh",item.rewardTitle||"Quà tặng",String(item.pointsCost||0),item.status==="pending"?"Chờ xác nhận":item.status==="approved"?"Đã duyệt":"Đã từ chối"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td);});
+  const actions=document.createElement("td");
+  if(item.status==="pending"){
+   const yes=document.createElement("button");yes.className="secondary";yes.textContent="Duyệt & trừ điểm";yes.onclick=()=>processRedemption(item,true);
+   const no=document.createElement("button");no.className="secondary";no.textContent="Từ chối";no.style.marginLeft="6px";no.onclick=()=>processRedemption(item,false);actions.append(yes,no);
+  }else actions.textContent="—";
+  tr.appendChild(actions);body.appendChild(tr);
+ });
+}
+async function compressRewardImage(file){
+ if(!file||!/^image\/(jpeg|png|webp)$/.test(file.type))throw new Error("Chỉ nhận ảnh JPG, PNG hoặc WebP.");
+ if(file.size>8*1024*1024)throw new Error("Ảnh gốc tối đa 8 MB.");
+ const bitmap=await createImageBitmap(file),scale=Math.min(1,850/Math.max(bitmap.width,bitmap.height));
+ const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+ canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+ let quality=.7,data=canvas.toDataURL("image/jpeg",quality);
+ while(data.length>560000&&quality>.3){quality-=.08;data=canvas.toDataURL("image/jpeg",quality);}
+ if(data.length>650000)throw new Error("Ảnh quá lớn sau khi nén. Hãy chọn ảnh khác.");
+ return data;
+}
+document.getElementById("addReward").addEventListener("click",()=>{
+ const title=prompt("Tên món quà:");if(title===null||!title.trim())return;
+ const raw=prompt("Số điểm cần đổi (số nguyên dương):","50");if(raw===null)return;
+ const pointsCost=Number(raw);if(!Number.isSafeInteger(pointsCost)||pointsCost<1){showToast("Điểm đổi phải là số nguyên dương.");return;}
+ const picker=document.createElement("input");picker.type="file";picker.accept="image/jpeg,image/png,image/webp";
+ picker.onchange=async()=>{const file=picker.files?.[0];if(!file)return;try{showToast("Đang nén ảnh quà...");const imageData=await compressRewardImage(file);await db.collection("rewards").add({title:title.trim(),pointsCost,imageData,teacherUid:currentTeacherUid,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast("Đã thêm quà vào kho.");}catch(e){showToast(e.message||"Không lưu được ảnh quà.");}};
+ picker.click();
+});
+async function processRedemption(item,approve){
+ const requestRef=db.collection("redemptions").doc(item.id),studentRef=db.collection("students").doc(item.studentUid);
+ try{
+  await db.runTransaction(async tx=>{
+   const [requestSnap,studentSnap]=await Promise.all([tx.get(requestRef),tx.get(studentRef)]);
+   if(!requestSnap.exists||requestSnap.data().status!=="pending")throw new Error("request_already_processed");
+   if(!studentSnap.exists||studentSnap.data().teacherUid!==currentTeacherUid)throw new Error("student_not_found");
+   const changes={status:approve?"approved":"rejected",processedAt:firebase.firestore.FieldValue.serverTimestamp(),processedBy:currentTeacherUid};
+   if(approve){const balance=Number(studentSnap.data().pointsBalance||0),cost=Number(requestSnap.data().pointsCost||0);if(balance<cost)throw new Error("not_enough_points");tx.update(studentRef,{pointsBalance:balance-cost,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+   tx.update(requestRef,changes);
+  });
+  showToast(approve?"Đã duyệt và trừ điểm.":"Đã từ chối yêu cầu.");
+ }catch(e){showToast(e.message==="not_enough_points"?"Học sinh không đủ điểm.":e.message==="request_already_processed"?"Yêu cầu đã được xử lý.":"Không xử lý được: "+(e.code||e.message));}
+}
+function stopStudentPortal(){studentPortalUnsubs.forEach(fn=>fn());studentPortalUnsubs=[];activeStudentUid=null;activeStudentProfile=null;}
+function startStudentPortal(uid,profile){
+ stopStudentPortal();activeStudentUid=uid;activeStudentProfile=profile;
+ document.getElementById("studentWelcome").textContent="Xin chào, "+(profile.name||"bạn")+"!";
+ renderStudentPoints(profile);
+ studentPortalUnsubs.push(db.collection("students").doc(uid).onSnapshot(s=>{if(s.exists){activeStudentProfile=s.data();renderStudentPoints(activeStudentProfile);}},e=>showToast("Không tải được điểm: "+e.code)));
+ studentPortalUnsubs.push(db.collection("rewards").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentRewards(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được quà: "+e.code)));
+ studentPortalUnsubs.push(db.collection("redemptions").where("studentUid","==",uid).onSnapshot(s=>renderStudentRequests(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được lịch sử đổi quà: "+e.code)));
+}
+function renderStudentPoints(profile){document.getElementById("studentPoints").textContent=String(Number(profile.pointsBalance||0));}
+function renderStudentRewards(list){
+ const grid=document.getElementById("studentRewardGrid");grid.textContent="";
+ const available=list.filter(x=>x.active!==false);
+ if(!available.length){grid.textContent="Giáo viên chưa đăng quà tặng.";return;}
+ available.forEach(item=>{
+  const card=document.createElement("div");card.className="reward-card";
+  const img=document.createElement("img");img.src=item.imageData;img.alt=item.title;
+  const title=document.createElement("h4");title.textContent=item.title;
+  const cost=document.createElement("p");cost.textContent=Number(item.pointsCost)+" điểm";
+  const btn=document.createElement("button");btn.className="primary";btn.textContent="Gửi yêu cầu đổi";
+  btn.onclick=async()=>{if(!confirm('Gửi yêu cầu đổi "'+item.title+'" với '+item.pointsCost+" điểm?"))return;try{await db.collection("redemptions").add({studentUid:activeStudentUid,studentId:activeStudentUid,studentName:activeStudentProfile.name||"Học sinh",teacherUid:activeStudentProfile.teacherUid,rewardId:item.id,rewardTitle:item.title,pointsCost:item.pointsCost,status:"pending",requestedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast("Đã gửi yêu cầu. Chờ giáo viên xác nhận nhé!");}catch(e){showToast("Chưa gửi được yêu cầu: "+e.code);}};
+  card.append(img,title,cost,btn);grid.appendChild(card);
+ });
+}
+function renderStudentRequests(list){
+ const host=document.getElementById("studentRequests");host.textContent="";
+ if(!list.length){host.textContent="Em chưa gửi yêu cầu đổi quà nào.";return;}
+ list.sort((a,b)=>(b.requestedAt?.toMillis?.()||0)-(a.requestedAt?.toMillis?.()||0)).forEach(x=>{const row=document.createElement("div");row.className="request-row";const status=x.status==="pending"?"Đang chờ giáo viên":x.status==="approved"?"Đã duyệt và trừ điểm":"Đã từ chối";row.textContent=x.rewardTitle+" · "+x.pointsCost+" điểm · "+status;host.appendChild(row);});
+}
 
 let dataUnsubs=[];
 let vocabRecords=[], assignmentRecords=[], submissionRecords=[], rewardRecords=[], redemptionRecords=[];
