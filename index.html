@@ -6,14 +6,14 @@
 <meta name="theme-color" content="#f2f9fd">
 <title>SNOW — Student Management</title>
 <style>
-:root{--pink:#8dbbdc;--pink2:#c8e2f3;--pink3:#edf7fd;--ink:#493b43;--muted:#988991;--line:#dfeaf1;--bg:#fff9fb;--white:#fff;--green:#62a88a;--orange:#d69a54;--shadow:0 8px 28px rgba(112,67,86,.07)}
+:root{--pink:#78acd0;--pink2:#c8e2f3;--pink3:#edf7fd;--ink:#263d50;--muted:#71899a;--line:#d8e8f2;--bg:#f5faff;--white:#fff;--green:#62a88a;--orange:#d69a54;--shadow:0 8px 28px rgba(66,119,153,.08)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 button,input,select{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:248px 1fr}
 .sidebar{background:#fff;border-right:1px solid var(--line);padding:24px 16px;display:flex;flex-direction:column;gap:24px}
 .brand{display:flex;align-items:center;gap:11px;padding:0 10px}.logo{width:42px;height:42px;border-radius:15px;background:linear-gradient(145deg,#c6e1f3,#8dbbdc);display:grid;place-items:center;color:white;font-size:22px;box-shadow:0 6px 14px #8dbbdc55}.brand b{font-size:19px;letter-spacing:.2px}.brand small{display:block;color:var(--muted);font-size:11px}
 .nav-label{font-size:10px;font-weight:800;letter-spacing:1.3px;color:#b4a5ad;padding:0 12px;margin:4px 0 8px}.nav{display:grid;gap:5px}.nav button{border:0;background:transparent;text-align:left;color:#796b73;padding:11px 13px;border-radius:12px;display:flex;align-items:center;gap:12px;font-weight:600}.nav button .ico{width:20px;text-align:center;font-size:17px}.nav button.active,.nav button:hover{background:var(--pink3);color:#568bb2}.side-note{margin-top:auto;background:#f2f9fd;border:1px solid #e3f1fa;border-radius:16px;padding:14px;font-size:12px;color:#71899a}.side-note b{display:block;color:#568bb2;margin-bottom:4px}
 main{min-width:0;padding:25px clamp(16px,3vw,38px) 40px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px}.eyebrow{font-size:12px;color:var(--muted);margin-bottom:3px}.topbar h1{font-size:25px;margin:0;letter-spacing:-.5px}.top-actions{display:flex;align-items:center;gap:10px}.pill{background:white;border:1px solid var(--line);border-radius:999px;padding:9px 13px;color:#806f78;font-size:12px}.avatar{width:38px;height:38px;border-radius:50%;background:#dceefa;color:#477fa8;display:grid;place-items:center;font-weight:800}
-.welcome{background:linear-gradient(110deg,#e4f2fb,#eff8fd 65%,#fff9fb);border:1px solid #dceefa;border-radius:20px;padding:23px 25px;display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px}.welcome h2{margin:0 0 5px;font-size:21px}.welcome p{margin:0;color:#947e89;font-size:13px}.welcome .flower{font-size:44px;opacity:.8}
+.welcome{background:linear-gradient(110deg,#e4f2fb,#eff8fd 65%,#f5faff);border:1px solid #dceefa;border-radius:20px;padding:23px 25px;display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px}.welcome h2{margin:0 0 5px;font-size:21px}.welcome p{margin:0;color:#947e89;font-size:13px}.welcome .flower{font-size:44px;opacity:.8}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.card,.stat{background:white;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow)}.stat{padding:17px}.stat-head{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}.stat-icon{width:34px;height:34px;border-radius:11px;background:var(--pink3);display:grid;place-items:center;font-size:17px}.stat strong{display:block;font-size:27px;margin-top:10px;letter-spacing:-.7px}.stat small{color:#a4949c;font-size:11px}
 .content-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(270px,1fr);gap:16px}.card{padding:19px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}.card h3{font-size:15px;margin:0}.sub{font-size:11px;color:var(--muted)}.linkbtn{border:0;background:transparent;color:#568bb2;font-weight:700;font-size:12px}
 .task{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #edf4f8}.task:first-of-type{border-top:0}.task-icon{width:39px;height:39px;border-radius:13px;background:#eff8fd;display:grid;place-items:center;font-size:18px;flex:none}.task-info{min-width:0;flex:1}.task-info b{display:block;font-size:13px}.task-info small{color:var(--muted);font-size:11px}.tag{font-size:10px;font-weight:700;border-radius:999px;padding:5px 9px;white-space:nowrap;background:#f1f8f4;color:#579675}.tag.wait{background:#fff5e9;color:#b88442}.tag.late{background:#fff0f0;color:#c76c72}
@@ -26,7 +26,7 @@ main{min-width:0;padding:25px clamp(16px,3vw,38px) 40px}.topbar{display:flex;ali
 @media(max-width:650px){.app{display:block}.sidebar{display:none;position:fixed;z-index:8;inset:0 auto 0 0;width:260px;box-shadow:10px 0 35px #53334422}.sidebar.show{display:flex}main{padding:17px 14px 30px}.mobile-menu{display:inline-block}.topbar{align-items:flex-start}.topbar h1{font-size:21px}.top-actions .pill{display:none}.welcome{padding:18px}.welcome .flower{font-size:34px}.stats{gap:9px}.stat{padding:13px}.stat strong{font-size:23px}.card{padding:15px}.task{align-items:flex-start}.task .tag{margin-top:3px}}
 
 body:not(.authenticated) .app{display:none}
-.auth-screen{min-height:100vh;display:grid;place-items:center;padding:22px;background:linear-gradient(145deg,#eff8fd,#fff9fb)}
+.auth-screen{min-height:100vh;display:grid;place-items:center;padding:22px;background:linear-gradient(145deg,#eaf5fc,#f8fbff)}
 .auth-card{width:min(420px,100%);background:#fff;border:1px solid #dfeaf1;border-radius:22px;padding:28px;box-shadow:0 18px 55px #70435618}
 .auth-logo{font-size:30px;font-weight:900;letter-spacing:5px;color:#568bb2;text-align:center;margin-bottom:12px}
 .auth-card h1{font-size:23px;text-align:center;margin:0 0 6px;color:#493b43}
@@ -71,7 +71,7 @@ body:not(.authenticated) .app{display:none}
       <button data-page="reports"><span class="ico">▥</span> Báo cáo</button>
     </nav>
   </div>
-  <div class="side-note"><b>❄️ SNOW preview</b>Đây là bản giao diện thử nghiệm. Dữ liệu hiện tại chỉ là dữ liệu minh họa, chưa kết nối máy chủ.</div>
+  <div class="side-note"><b>❄️ SNOW</b>Dữ liệu được đồng bộ qua Firebase của môi trường thử nghiệm.</div>
 </aside>
 <main>
   <header class="topbar">
@@ -82,10 +82,10 @@ body:not(.authenticated) .app{display:none}
   <section class="page active" id="page-dashboard">
     <div class="welcome"><div><h2>Chào cô giáo! 🌸</h2><p>Mỗi bước tiến nhỏ hôm nay tạo nên thành công ngày mai.</p></div><div class="flower">🌷</div></div>
     <div class="stats">
-      <div class="stat"><div class="stat-head"><span>Học sinh</span><span class="stat-icon">👩🏻‍🎓</span></div><strong>06</strong><small>Đang theo học</small></div>
-      <div class="stat"><div class="stat-head"><span>Nhiệm vụ</span><span class="stat-icon">📚</span></div><strong>18</strong><small>Trong tháng này</small></div>
-      <div class="stat"><div class="stat-head"><span>Chờ chấm</span><span class="stat-icon">📝</span></div><strong>03</strong><small>Cần xem bài nộp</small></div>
-      <div class="stat"><div class="stat-head"><span>Hoàn thành</span><span class="stat-icon">✨</span></div><strong>84%</strong><small>Tỷ lệ hoàn thành tuần</small></div>
+      <div class="stat"><div class="stat-head"><span>Học sinh</span><span class="stat-icon">👩🏻‍🎓</span></div><strong id="dashStudents">0</strong><small>Đang theo học</small></div>
+      <div class="stat"><div class="stat-head"><span>Nhiệm vụ</span><span class="stat-icon">📚</span></div><strong id="dashAssignments">0</strong><small>Bài tập đã giao</small></div>
+      <div class="stat"><div class="stat-head"><span>Chờ chấm</span><span class="stat-icon">📝</span></div><strong id="dashPending">0</strong><small>Chờ chấm</small></div>
+      <div class="stat"><div class="stat-head"><span>Hoàn thành</span><span class="stat-icon">✨</span></div><strong id="dashAverage">—</strong><small>Điểm trung bình</small></div>
     </div>
     <div class="content-grid">
       <div class="card"><div class="card-head"><div><h3>Nhiệm vụ gần đây</h3><div class="sub">Theo dõi tình hình bài tập của lớp</div></div><button class="linkbtn" data-go="grammar">Xem tất cả →</button></div>
@@ -111,48 +111,38 @@ body:not(.authenticated) .app{display:none}
   </section>
 
   <section class="page" id="page-vocabulary">
-    <div class="notice">Lịch ôn tự động và đồng bộ giữa các thiết bị sẽ hoạt động sau khi kết nối Firestore.</div>
+    <div class="notice">Bộ từ vựng được lưu riêng theo tài khoản giáo viên và đồng bộ qua Firestore.</div>
     <div class="toolbar"><div><h3>Bộ từ vựng & lịch ôn</h3><div class="sub">Theo dõi các mốc ôn tập cách quãng</div></div><button class="primary" id="addVocab">＋ Tạo bộ từ</button></div>
-    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Bộ từ vựng</th><th>Học sinh</th><th>Ngày bắt đầu</th><th>Lịch ôn</th><th>Tiến độ</th></tr></thead><tbody>
-    <tr><td>Unit 5 — Food & Health</td><td>6 học sinh</td><td>12/11/2026</td><td>3 · 5 · 7 · 14 · 30 ngày</td><td><span class="tag">3/5 lần</span></td></tr>
-    <tr><td>Unit 4 — Around Town</td><td>4 học sinh</td><td>08/11/2026</td><td>3 · 5 · 7 · 14 · 30 ngày</td><td><span class="tag wait">2/5 lần</span></td></tr>
-    </tbody></table></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Bộ từ vựng</th><th>Lớp</th><th>Số từ</th><th>Cập nhật</th><th>Thao tác</th></tr></thead><tbody id="vocabBody"><tr><td colspan="5">Đang tải...</td></tr></tbody></table></div>
   </section>
 
   <section class="page" id="page-grammar">
-    <div class="notice">Nhiệm vụ ở đây là dữ liệu minh họa. Chưa gửi bài hoặc cộng/trừ điểm thật.</div>
+    <div class="notice">Bài tập được lưu trên Firestore. Học sinh chưa có tài khoản đăng nhập riêng trong phiên bản này.</div>
     <div class="toolbar"><div><h3>Bài tập ngữ pháp</h3><div class="sub">Giao bài, đặt hạn nộp và theo dõi hoàn thành</div></div><button class="primary" id="addGrammar">＋ Giao bài tập</button></div>
-    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Tên bài tập</th><th>Giao cho</th><th>Hạn nộp</th><th>Đã nộp</th><th>Trạng thái</th></tr></thead><tbody>
-    <tr><td>Past Simple Exercises</td><td>Tất cả</td><td>19/11/2026</td><td>4/6</td><td><span class="tag wait">Đang chờ</span></td></tr>
-    <tr><td>Comparatives worksheet</td><td>4 học sinh</td><td>20/11/2026</td><td>3/4</td><td><span class="tag">Đang thực hiện</span></td></tr>
-    <tr><td>Present Continuous</td><td>Tất cả</td><td>17/11/2026</td><td>6/6</td><td><span class="tag">Hoàn thành</span></td></tr>
-    </tbody></table></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Tên bài tập</th><th>Lớp</th><th>Hạn nộp</th><th>Mô tả</th><th>Thao tác</th></tr></thead><tbody id="assignmentBody"><tr><td colspan="5">Đang tải...</td></tr></tbody></table></div>
   </section>
 
   <section class="page" id="page-submissions">
-    <div class="notice">Ảnh bài làm chưa được tải lên Cloudinary. Không có ảnh học sinh thật trong bản xem trước.</div>
-    <div class="toolbar"><div><h3>Bài nộp của học sinh</h3><div class="sub">Kiểm tra ảnh, thời gian nộp và nhận xét</div></div><button class="secondary" id="submissionFilter">Tất cả bài nộp⌄</button></div>
-    <div class="card"><div class="empty">📷<br><b>Chưa có bài nộp thật</b><br>Danh sách bài nộp sẽ xuất hiện tại đây sau khi kết nối Firebase và Cloudinary.</div></div>
+    <div class="notice">Giáo viên có thể ghi nhận bài nộp, tải ảnh lên Cloudinary và chấm điểm. Cần cấu hình upload preset không ký số trên Cloudinary.</div>
+    <div class="toolbar"><div><h3>Bài nộp của học sinh</h3><div class="sub">Ghi nhận bài nộp, xem ảnh và chấm điểm</div></div><button class="primary" id="addSubmission" type="button">＋ Ghi nhận bài nộp</button></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Bài tập</th><th>Ảnh</th><th>Điểm</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="submissionBody"><tr><td colspan="6">Đang tải...</td></tr></tbody></table></div>
   </section>
 
   <section class="page" id="page-scores">
-    <div class="notice">Điểm và streak hiện là số liệu minh họa. Quy tắc cộng/trừ điểm sẽ được bảo vệ bằng Firestore Rules và thiết kế dữ liệu chống xử lý trùng.</div>
+    <div class="notice">Điểm được tổng hợp từ các lần chấm bài. Streak tự động chưa được bật vì học sinh chưa có tài khoản hoạt động độc lập.</div>
     <div class="toolbar"><div><h3>Điểm thưởng & streak</h3><div class="sub">Theo dõi động lực học tập của từng bạn</div></div><button class="secondary" id="scoreHistory">Lịch sử điểm</button></div>
-    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Tổng điểm</th><th>Streak hiện tại</th><th>Streak cao nhất</th><th>Tiến độ</th></tr></thead><tbody>
-    <tr><td>An Nguyễn</td><td>120 ⭐</td><td>7 ngày 🔥</td><td>12 ngày</td><td>92%</td></tr><tr><td>Minh Trần</td><td>105 ⭐</td><td>5 ngày 🔥</td><td>9 ngày</td><td>88%</td></tr><tr><td>Hà Lê</td><td>90 ⭐</td><td>4 ngày 🔥</td><td>8 ngày</td><td>80%</td></tr><tr><td>Nam Phạm</td><td>75 ⭐</td><td>2 ngày 🔥</td><td>6 ngày</td><td>76%</td></tr>
-    </tbody></table></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Tổng điểm</th><th>Số bài đã chấm</th></tr></thead><tbody id="scoresBody"><tr><td colspan="3">Đang tải...</td></tr></tbody></table></div>
   </section>
 
   <section class="page" id="page-reports">
-    <div class="toolbar"><div><h3>Báo cáo học tập</h3><div class="sub">Tổng hợp kết quả theo tuần</div></div><button class="primary" id="exportDemo">↓ Xuất Excel</button></div>
-    <div class="notice">Bản xem trước chưa có dữ liệu thật để xuất. Chức năng Excel sẽ lấy dữ liệu trực tiếp từ Firestore ở giai đoạn báo cáo.</div>
-    <div class="card"><div class="empty">📊<br><b>Báo cáo tuần</b><br>Biểu đồ và thống kê sẽ được hiển thị khi có dữ liệu học tập thật.</div></div>
+    <div class="toolbar"><div><h3>Báo cáo học tập</h3><div class="sub">Tổng hợp học sinh, bài tập và kết quả chấm</div></div><button class="primary" id="exportDemo">↓ Xuất CSV Excel</button></div>
+    <div class="stats"><div class="stat"><div class="stat-head">Học sinh</div><strong id="reportStudents">0</strong></div><div class="stat"><div class="stat-head">Bộ từ vựng</div><strong id="reportVocab">0</strong></div><div class="stat"><div class="stat-head">Bài tập</div><strong id="reportAssignments">0</strong></div><div class="stat"><div class="stat-head">Bài đã chấm</div><strong id="reportGraded">0</strong></div></div><div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Số bài chấm</th><th>Điểm trung bình</th><th>Tổng điểm</th></tr></thead><tbody id="reportBody"><tr><td colspan="4">Đang tổng hợp...</td></tr></tbody></table></div>
   </section>
 </main>
 </div>
 <div class="modal-backdrop" id="studentModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle"><h3 id="studentModalTitle">Thêm học sinh</h3><form id="studentForm"><div class="student-form-grid"><div class="full"><label for="studentName">Họ và tên *</label><input id="studentName" maxlength="100" required placeholder="Ví dụ: Nguyễn Minh Anh"></div><div><label for="studentEmail">Email (không bắt buộc)</label><input id="studentEmail" type="email" maxlength="160" placeholder="student@example.com"></div><div><label for="studentClass">Lớp</label><input id="studentClass" maxlength="60" placeholder="Ví dụ: Pink 01"></div><div class="full"><label for="studentStatus">Trạng thái</label><select id="studentStatus"><option value="active">Đang học</option><option value="paused">Tạm nghỉ</option></select></div><div class="full"><label for="studentNotes">Ghi chú</label><textarea id="studentNotes" maxlength="1000" placeholder="Ghi chú dành cho giáo viên"></textarea></div></div><div class="modal-actions"><button class="secondary" id="cancelStudent" type="button">Hủy</button><button class="primary" id="saveStudent" type="submit">Lưu hồ sơ</button></div><div class="auth-message" id="studentFormMessage" role="status"></div></form></div></div>
 <div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">Tạo mới</h3><div class="field"><label id="fieldLabel">Tên</label><input id="modalInput" placeholder="Nhập thông tin"></div><div class="modal-actions"><button class="secondary" id="cancelModal">Hủy</button><button class="primary" id="saveModal">Lưu bản nháp</button></div></div></div>
-<div class="toast" id="toast">Đây là bản xem trước — dữ liệu chưa được lưu.</div>
+<div class="toast" id="toast">Đã cập nhật.</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -216,7 +206,7 @@ auth.onAuthStateChanged(async (user) => {
     }
     document.body.classList.add('authenticated');
     authScreen.style.display = 'none';
-    startStudentsListener(user.uid);
+    startStudentsListener(user.uid);\n    startDataListeners();
   } catch (error) {
     await auth.signOut();
     authMessage.textContent = 'Không thể xác minh quyền. Kiểm tra kết nối và Firestore Rules.';
@@ -252,6 +242,7 @@ const studentSearch = document.getElementById('studentSearch');
 
 function stopStudentsListener(){
   if(studentsUnsubscribe){studentsUnsubscribe();studentsUnsubscribe=null;}
+  stopDataListeners();
   currentTeacherUid=null;
   studentRecords=[];
 }
@@ -337,7 +328,96 @@ studentForm.addEventListener('submit',async event=>{
 });
 studentModal.addEventListener('keydown',event=>{if(event.key==='Escape')studentModal.classList.remove('open')});
 
-modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});\n
+let dataUnsubs=[];
+let vocabRecords=[], assignmentRecords=[], submissionRecords=[];
+const cloudinaryCloud='mqqzw5ot', cloudinaryPreset='pink-class-submissions';
+function stopDataListeners(){dataUnsubs.forEach(fn=>fn());dataUnsubs=[];vocabRecords=[];assignmentRecords=[];submissionRecords=[];}
+function listenCollection(name,callback){
+ const unsub=db.collection(name).where('teacherUid','==',currentTeacherUid).onSnapshot(snap=>{callback(snap.docs.map(d=>({id:d.id,...d.data()})));},err=>showToast('Lỗi tải '+name+': '+err.code));
+ dataUnsubs.push(unsub);
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function dateText(v){return v&&v.toDate?v.toDate().toLocaleDateString('vi-VN'):String(v||'—');}
+function renderVocab(){
+ const body=document.getElementById('vocabBody');body.innerHTML='';
+ if(!vocabRecords.length){body.innerHTML='<tr><td colspan="5" class="empty">Chưa có bộ từ vựng.</td></tr>';return;}
+ vocabRecords.forEach(x=>{const n=(x.words||'').split(/\n/).filter(Boolean).length;const tr=document.createElement('tr');tr.innerHTML='<td>'+esc(x.title)+'</td><td>'+esc(x.className||'Tất cả')+'</td><td>'+n+'</td><td>'+dateText(x.updatedAt)+'</td><td><div class="student-actions"><button data-edit="'+x.id+'">Sửa</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
+}
+function renderAssignments(){
+ const body=document.getElementById('assignmentBody');body.innerHTML='';
+ if(!assignmentRecords.length){body.innerHTML='<tr><td colspan="5" class="empty">Chưa có bài tập.</td></tr>';return;}
+ assignmentRecords.forEach(x=>{const tr=document.createElement('tr');tr.innerHTML='<td>'+esc(x.title)+'</td><td>'+esc(x.className||'Tất cả')+'</td><td>'+esc(x.dueDate||'—')+'</td><td>'+esc(x.description||'—')+'</td><td><div class="student-actions"><button data-edit="'+x.id+'">Sửa</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
+}
+function renderSubmissions(){
+ const body=document.getElementById('submissionBody');body.innerHTML='';
+ if(!submissionRecords.length){body.innerHTML='<tr><td colspan="6" class="empty">Chưa có bài nộp.</td></tr>';return;}
+ submissionRecords.forEach(x=>{const tr=document.createElement('tr');const image=x.imageUrl?'<a href="'+esc(x.imageUrl)+'" target="_blank" rel="noopener">Xem ảnh</a>':'—';tr.innerHTML='<td>'+esc(x.studentName)+'</td><td>'+esc(x.assignmentTitle)+'</td><td>'+image+'</td><td>'+(x.score==null?'—':esc(x.score)+'/100')+'</td><td><span class="tag '+(x.score==null?'wait':'')+'">'+(x.score==null?'Chờ chấm':'Đã chấm')+'</span></td><td><div class="student-actions"><button data-grade="'+x.id+'">Chấm</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
+}
+function renderAnalytics(){
+ const graded=submissionRecords.filter(x=>typeof x.score==='number');
+ const avg=graded.length?Math.round(graded.reduce((a,x)=>a+x.score,0)/graded.length):0;
+ document.getElementById('dashStudents').textContent=studentRecords.length;
+ document.getElementById('dashAssignments').textContent=assignmentRecords.length;
+ document.getElementById('dashPending').textContent=submissionRecords.filter(x=>x.score==null).length;
+ document.getElementById('dashAverage').textContent=graded.length?avg+'/100':'—';
+ document.getElementById('reportStudents').textContent=studentRecords.length;
+ document.getElementById('reportVocab').textContent=vocabRecords.length;
+ document.getElementById('reportAssignments').textContent=assignmentRecords.length;
+ document.getElementById('reportGraded').textContent=graded.length;
+ const rows=studentRecords.map(st=>{const list=graded.filter(x=>x.studentId===st.id);return {name:st.name,count:list.length,avg:list.length?Math.round(list.reduce((a,x)=>a+x.score,0)/list.length):0,total:list.reduce((a,x)=>a+x.score,0)};});
+ document.getElementById('scoresBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+' ⭐</td><td>'+x.count+'</td></tr>').join(''):'<tr><td colspan="3" class="empty">Chưa có học sinh.</td></tr>';
+ document.getElementById('reportBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.count+'</td><td>'+(x.count?x.avg+'/100':'—')+'</td><td>'+x.total+'</td></tr>').join(''):'<tr><td colspan="4" class="empty">Chưa có dữ liệu.</td></tr>';
+}
+function startDataListeners(){
+ stopDataListeners();
+ listenCollection('vocabularySets',x=>{vocabRecords=x;renderVocab();renderAnalytics();});
+ listenCollection('assignments',x=>{assignmentRecords=x;renderAssignments();renderAnalytics();});
+ listenCollection('submissions',x=>{submissionRecords=x;renderSubmissions();renderAnalytics();});
+}
+async function createOrEditRecord(collection,old){
+ const vocab=collection==='vocabularySets';
+ const title=prompt(vocab?'Tên bộ từ vựng:':'Tên bài tập:',old?.title||'');if(title===null)return;
+ const second=prompt(vocab?'Nhập mỗi từ/cụm từ trên một dòng:':'Mô tả yêu cầu bài tập:',vocab?(old?.words||''):(old?.description||''));if(second===null)return;
+ const className=prompt('Tên lớp (để trống nếu áp dụng tất cả):',old?.className||'')??'';
+ const data={title:title.trim(),className:className.trim(),teacherUid:currentTeacherUid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+ if(vocab)data.words=second;else{data.description=second;data.dueDate=prompt('Hạn nộp (YYYY-MM-DD):',old?.dueDate||'')??'';}
+ if(!data.title){showToast('Tên không được để trống.');return;}
+ try{if(old)await db.collection(collection).doc(old.id).update(data);else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection(collection).add(data);}showToast('Đã lưu dữ liệu.');}
+ catch(e){showToast('Không lưu được: '+e.code);}
+}
+async function deleteRecord(collection,id){if(!confirm('Bạn chắc chắn muốn xóa mục này?'))return;try{await db.collection(collection).doc(id).delete();showToast('Đã xóa.');}catch(e){showToast('Không xóa được: '+e.code);}}
+document.getElementById('addVocab').onclick=()=>createOrEditRecord('vocabularySets');
+document.getElementById('addGrammar').onclick=()=>createOrEditRecord('assignments');
+document.getElementById('vocabBody').addEventListener('click',e=>{const id=e.target.dataset.edit||e.target.dataset.del;if(!id)return;const x=vocabRecords.find(a=>a.id===id);if(e.target.dataset.edit)createOrEditRecord('vocabularySets',x);else deleteRecord('vocabularySets',id);});
+document.getElementById('assignmentBody').addEventListener('click',e=>{const id=e.target.dataset.edit||e.target.dataset.del;if(!id)return;const x=assignmentRecords.find(a=>a.id===id);if(e.target.dataset.edit)createOrEditRecord('assignments',x);else deleteRecord('assignments',id);});
+document.getElementById('addSubmission').onclick=async()=>{
+ if(!studentRecords.length||!assignmentRecords.length){showToast('Cần tạo học sinh và bài tập trước.');return;}
+ const studentNameList=studentRecords.map((x,i)=>(i+1)+'. '+x.name).join('\n');
+ const si=Number(prompt('Chọn học sinh bằng số:\n'+studentNameList,'1'))-1;const st=studentRecords[si];if(!st)return;
+ const assignmentList=assignmentRecords.map((x,i)=>(i+1)+'. '+x.title).join('\n');
+ const ai=Number(prompt('Chọn bài tập bằng số:\n'+assignmentList,'1'))-1;const as=assignmentRecords[ai];if(!as)return;
+ const note=prompt('Ghi chú bài nộp (không bắt buộc):','')??'';
+ const file=document.createElement('input');file.type='file';file.accept='image/jpeg,image/png,image/webp';file.click();
+ file.onchange=async()=>{const imageFile=file.files[0];if(!imageFile)return;if(imageFile.size>5*1024*1024){showToast('Ảnh tối đa 5 MB.');return;}
+ try{showToast('Đang tải ảnh lên...');const form=new FormData();form.append('file',imageFile);form.append('upload_preset',cloudinaryPreset);const response=await fetch('https://api.cloudinary.com/v1_1/'+cloudinaryCloud+'/image/upload',{method:'POST',body:form});if(!response.ok)throw new Error('upload_failed');const uploaded=await response.json();
+ await db.collection('submissions').add({teacherUid:currentTeacherUid,studentId:st.id,studentName:st.name,assignmentId:as.id,assignmentTitle:as.title,imageUrl:uploaded.secure_url,note,status:'submitted',score:null,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã ghi nhận bài nộp.');}
+ catch(err){showToast('Tải ảnh/lưu bài nộp thất bại. Kiểm tra Cloudinary preset và Firestore Rules.');}};
+};
+document.getElementById('submissionBody').addEventListener('click',async e=>{
+ const id=e.target.dataset.grade||e.target.dataset.del;if(!id)return;
+ if(e.target.dataset.del){deleteRecord('submissions',id);return;}
+ const item=submissionRecords.find(x=>x.id===id);const raw=prompt('Nhập điểm từ 0 đến 100:',item.score??'');if(raw===null)return;const score=Number(raw);if(!Number.isFinite(score)||score<0||score>100){showToast('Điểm phải từ 0 đến 100.');return;}
+ const feedback=prompt('Nhận xét cho học sinh (không bắt buộc):',item.feedback||'')??'';
+ try{await db.collection('submissions').doc(id).update({score,feedback,status:'graded',gradedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});await db.collection('scoreEvents').add({teacherUid:currentTeacherUid,studentId:item.studentId,submissionId:id,points:score,createdAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã lưu điểm và lịch sử điểm.');}
+ catch(err){showToast('Không chấm được: '+err.code);}
+});
+document.getElementById('exportDemo').onclick=()=>{
+ const rows=[['Học sinh','Số bài đã chấm','Điểm trung bình','Tổng điểm'],...studentRecords.map(st=>{const a=submissionRecords.filter(x=>x.studentId===st.id&&typeof x.score==='number');return [st.name,a.length,a.length?Math.round(a.reduce((n,x)=>n+x.score,0)/a.length):'',a.reduce((n,x)=>n+x.score,0)];})];
+ const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='snow-bao-cao.csv';a.click();URL.revokeObjectURL(url);
+};
+
 </script>
 </body>
 </html>
