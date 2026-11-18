@@ -73,7 +73,7 @@ body:not(.authenticated) .app{display:none}
       <button data-page="reports"><span class="ico">▥</span> Báo cáo</button>
     </nav>
   </div>
-  <div class="side-note"><b>❄️ SNOW</b>Dữ liệu được đồng bộ qua Firebase của môi trường thử nghiệm.</div>
+  <div class="side-note"><b>❄️ SNOW</b>Dữ liệu đồng bộ qua Firebase của lớp học.</div>
 </aside>
 <main>
   <header class="topbar">
@@ -115,13 +115,13 @@ body:not(.authenticated) .app{display:none}
   </section>
 
   <section class="page" id="page-grammar">
-    <div class="notice">Bài tập được lưu trên Firestore. Học sinh chưa có tài khoản đăng nhập riêng trong phiên bản này.</div>
+    <div class="notice">Bài tập được lưu trên Firestore. Học sinh có thể đăng nhập và nộp ảnh bài làm trực tiếp trong khu vực học sinh.</div>
     <div class="toolbar"><div><h3>Bài tập ngữ pháp</h3><div class="sub">Giao bài, đặt hạn nộp và theo dõi hoàn thành</div></div><button class="primary" id="addGrammar">＋ Giao bài tập</button></div>
     <div class="card table-wrap"><table class="data-table"><thead><tr><th>Tên bài tập</th><th>Lớp</th><th>Hạn nộp</th><th>Mô tả</th><th>Thao tác</th></tr></thead><tbody id="assignmentBody"><tr><td colspan="5">Đang tải...</td></tr></tbody></table></div>
   </section>
 
   <section class="page" id="page-submissions">
-    <div class="notice">Giáo viên có thể ghi nhận bài nộp, tải ảnh lên Cloudinary và chấm điểm. Cần cấu hình upload preset không ký số trên Cloudinary.</div>
+    <div class="notice">Học sinh nộp ảnh bài làm trực tiếp; giáo viên xem bài, nhận xét và chấm điểm tại đây.</div>
     <div class="toolbar"><div><h3>Bài nộp của học sinh</h3><div class="sub">Ghi nhận bài nộp, xem ảnh và chấm điểm</div></div><button class="primary" id="addSubmission" type="button">＋ Ghi nhận bài nộp</button></div>
     <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Bài tập</th><th>Ảnh</th><th>Điểm</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="submissionBody"><tr><td colspan="6">Đang tải...</td></tr></tbody></table></div>
   </section>
