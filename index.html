@@ -37,6 +37,7 @@ body:not(.authenticated) .app{display:none}
 .auth-message{font-size:12px;color:#477fa8;margin-top:12px;min-height:18px;text-align:center}
 .signout-btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:#5d829d;font-size:12px;font-weight:700}
 .student-actions{display:flex;gap:7px;white-space:nowrap}.student-actions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;color:#806f78;font-size:12px;font-weight:700}.student-actions .danger{color:#477fa8}.student-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.student-form-grid .full{grid-column:1/-1}.student-form-grid label{display:block;font-size:12px;font-weight:700;color:#806f78;margin-bottom:5px}.student-form-grid input,.student-form-grid select,.student-form-grid textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:#f8fcff;color:var(--ink)}.student-form-grid textarea{min-height:76px;resize:vertical}@media(max-width:600px){.student-form-grid{grid-template-columns:1fr}.student-form-grid .full{grid-column:auto}}
+.reward-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}.reward-card{border:1px solid var(--line);border-radius:15px;padding:12px;background:#fff}.reward-card img{width:100%;height:135px;object-fit:cover;border-radius:10px;background:#f2f7fb}.reward-card h4{margin:9px 0 3px;font-size:14px}.reward-card p{margin:0;color:var(--muted);font-size:12px}.reward-card button{margin-top:10px;width:100%}.student-portal{display:none;min-height:100vh;padding:22px;background:var(--bg)}body.student-mode .app,body.student-mode .auth-screen{display:none!important}body.student-mode .student-portal{display:block}.student-portal-inner{max-width:980px;margin:auto}.student-hero{background:linear-gradient(120deg,#e4f2fb,#f4faff);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:16px}.student-hero h1{margin:0 0 5px}.student-balance{font-size:34px;font-weight:850;color:#568bb2}.student-portal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.student-portal-section{background:white;border:1px solid var(--line);border-radius:17px;padding:18px;margin:15px 0}.student-portal-section h2{font-size:17px;margin:0 0 14px}.request-row{padding:10px 0;border-bottom:1px solid #edf4f8;font-size:13px}.request-row:last-child{border:0}@media(max-width:600px){.student-portal{padding:14px}.student-portal-head{align-items:flex-start}}
 
 </style>
 </head>
@@ -46,7 +47,7 @@ body:not(.authenticated) .app{display:none}
   <form class="auth-card" id="loginForm">
     <div class="auth-logo">SNOW</div>
     <h1>Đăng nhập SNOW</h1>
-    <p>Dành cho giáo viên đã được cấp tài khoản</p>
+    <p>Dành cho giáo viên và học sinh có tài khoản SNOW</p>
     <label for="loginEmail">Email</label>
     <input id="loginEmail" type="email" autocomplete="username" required placeholder="Email giáo viên">
     <label for="loginPassword">Mật khẩu</label>
@@ -68,6 +69,7 @@ body:not(.authenticated) .app{display:none}
       <button data-page="grammar"><span class="ico">▤</span> Bài tập ngữ pháp</button>
       <button data-page="submissions"><span class="ico">▧</span> Bài nộp</button>
       <button data-page="scores"><span class="ico">☆</span> Điểm & streak</button>
+      <button data-page="rewards"><span class="ico">🎁</span> Đổi quà</button>
       <button data-page="reports"><span class="ico">▥</span> Báo cáo</button>
     </nav>
   </div>
@@ -130,6 +132,8 @@ body:not(.authenticated) .app{display:none}
     <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Tổng điểm</th><th>Số bài đã chấm</th></tr></thead><tbody id="scoresBody"><tr><td colspan="3">Đang tải...</td></tr></tbody></table></div>
   </section>
 
+  <section class="page" id="page-rewards"><div class="notice">Học sinh gửi yêu cầu đổi quà; giáo viên xác nhận để trừ điểm.</div><div class="toolbar"><div><h3>Kho quà tặng</h3><div class="sub">Đăng ảnh, đặt tên và điểm đổi quà</div></div><button class="primary" id="addReward" type="button">＋ Thêm quà</button></div><div class="reward-grid" id="teacherRewardGrid"><div class="empty">Đang tải quà...</div></div><div class="toolbar" style="margin-top:24px"><div><h3>Yêu cầu đổi quà</h3></div></div><div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Quà</th><th>Điểm</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="redemptionsBody"><tr><td colspan="5">Đang tải...</td></tr></tbody></table></div></section>
+
   <section class="page" id="page-reports">
     <div class="toolbar"><div><h3>Báo cáo học tập</h3><div class="sub">Tổng hợp học sinh, bài tập và kết quả chấm</div></div><button class="primary" id="exportDemo">↓ Xuất CSV Excel</button></div>
     <div class="stats"><div class="stat"><div class="stat-head">Học sinh</div><strong id="reportStudents">0</strong></div><div class="stat"><div class="stat-head">Bộ từ vựng</div><strong id="reportVocab">0</strong></div><div class="stat"><div class="stat-head">Bài tập</div><strong id="reportAssignments">0</strong></div><div class="stat"><div class="stat-head">Bài đã chấm</div><strong id="reportGraded">0</strong></div></div><div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Số bài chấm</th><th>Điểm trung bình</th><th>Tổng điểm</th></tr></thead><tbody id="reportBody"><tr><td colspan="4">Đang tổng hợp...</td></tr></tbody></table></div>
@@ -137,6 +141,7 @@ body:not(.authenticated) .app{display:none}
 </main>
 </div>
 <div class="modal-backdrop" id="studentModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle"><h3 id="studentModalTitle">Thêm học sinh</h3><form id="studentForm"><div class="student-form-grid"><div class="full"><label for="studentName">Họ và tên *</label><input id="studentName" maxlength="100" required placeholder="Ví dụ: Nguyễn Minh Anh"></div><div><label for="studentEmail">Email (không bắt buộc)</label><input id="studentEmail" type="email" maxlength="160" placeholder="student@example.com"></div><div><label for="studentClass">Lớp</label><input id="studentClass" maxlength="60" placeholder="Ví dụ: Pink 01"></div><div class="full"><label for="studentStatus">Trạng thái</label><select id="studentStatus"><option value="active">Đang học</option><option value="paused">Tạm nghỉ</option></select></div><div class="full"><label for="studentNotes">Ghi chú</label><textarea id="studentNotes" maxlength="1000" placeholder="Ghi chú dành cho giáo viên"></textarea></div></div><div class="modal-actions"><button class="secondary" id="cancelStudent" type="button">Hủy</button><button class="primary" id="saveStudent" type="submit">Lưu hồ sơ</button></div><div class="auth-message" id="studentFormMessage" role="status"></div></form></div></div>
+<div class="student-portal" id="studentPortal"><div class="student-portal-inner"><div class="student-portal-head"><div class="brand"><div class="logo">S</div><div><b>SNOW</b><small>KHU VỰC HỌC SINH</small></div></div><button class="signout-btn" id="studentSignOut" type="button">Đăng xuất</button></div><div class="student-hero"><h1 id="studentWelcome">Xin chào!</h1><p>Điểm thưởng hiện tại</p><div class="student-balance"><span id="studentPoints">0</span> ⭐</div></div><div class="student-portal-section"><h2>🎁 Quà có thể đổi</h2><div class="reward-grid" id="studentRewardGrid"><div class="empty">Đang tải quà...</div></div></div><div class="student-portal-section"><h2>📋 Yêu cầu đổi quà của em</h2><div id="studentRequests">Chưa có yêu cầu.</div></div></div></div>
 <div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">Tạo mới</h3><div class="field"><label id="fieldLabel">Tên</label><input id="modalInput" placeholder="Nhập thông tin"></div><div class="modal-actions"><button class="secondary" id="cancelModal">Hủy</button><button class="primary" id="saveModal">Lưu bản nháp</button></div></div></div>
 <div class="toast" id="toast">Đã cập nhật.</div>
 
