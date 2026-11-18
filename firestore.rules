@@ -140,7 +140,20 @@ service cloud.firestore {
         && request.resource.data.requestedAt == resource.data.requestedAt
         && request.resource.data.processedBy == request.auth.uid
         && request.resource.data.processedAt == request.time
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','processedBy','processedAt']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','processedBy','processedAt'])
+        && (
+          (request.resource.data.status == 'approved'
+            && getAfter(/databases/$(database)/documents/students/$(resource.data.studentId)).data.pointsBalance
+              == get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.pointsBalance - resource.data.pointsCost
+            && existsAfter(/databases/$(database)/documents/scoreEvents/redemption_$(redemptionId))
+            && getAfter(/databases/$(database)/documents/scoreEvents/redemption_$(redemptionId)).data.studentId == resource.data.studentId
+            && getAfter(/databases/$(database)/documents/scoreEvents/redemption_$(redemptionId)).data.points == -resource.data.pointsCost
+            && getAfter(/databases/$(database)/documents/scoreEvents/redemption_$(redemptionId)).data.teacherUid == request.auth.uid)
+          ||
+          (request.resource.data.status == 'rejected'
+            && getAfter(/databases/$(database)/documents/students/$(resource.data.studentId)).data.pointsBalance
+              == get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.pointsBalance)
+        );
       allow delete: if false;
     }
 
