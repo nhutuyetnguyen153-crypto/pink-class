@@ -58,7 +58,7 @@ service cloud.firestore {
           && request.resource.data.authUid is string
           && request.resource.data.pointsBalance is number && request.resource.data.pointsBalance >= 0;
       }
-      allow get: if (isTeacher() && owns(resource.data)) || (signedIn() && resource.data.authUid == request.auth.uid && ((request.auth.uid == studentId) || (exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)) && get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId == studentId)));
+      allow get: if (isTeacher() && owns(resource.data)) || (signedIn() && request.auth.uid == studentId) || (signedIn() && resource.data.authUid == request.auth.uid && exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)) && get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId == studentId);
       allow list: if isTeacher();
       allow create: if isTeacher() && validStudentData()
         && request.resource.data.authUid == studentId
