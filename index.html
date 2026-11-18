@@ -456,7 +456,8 @@ function startStudentPortal(uid,profile,studentDocId=uid){
  document.getElementById("studentWelcome").textContent="Xin chào, "+(profile.name||"bạn")+"!";
  renderStudentPoints(profile);
  studentPortalUnsubs.push(db.collection("students").doc(studentDocId).onSnapshot(s=>{if(s.exists){activeStudentProfile=s.data();renderStudentPoints(activeStudentProfile);}},e=>showToast("Không tải được điểm: "+e.code)));
- studentPortalUnsubs.push(db.collection("assignments").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentAssignments(s.docs.map(d=>({id:d.id,...d.data()})),profile),e=>showToast("Không tải được bài tập: "+e.code)));\n studentPortalUnsubs.push(db.collection("rewards").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentRewards(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được quà: "+e.code)));
+ studentPortalUnsubs.push(db.collection("assignments").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentAssignments(s.docs.map(d=>({id:d.id,...d.data()})),profile),e=>showToast("Không tải được bài tập: "+e.code)));
+ studentPortalUnsubs.push(db.collection("rewards").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentRewards(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("redemptions").where("studentUid","==",uid).onSnapshot(s=>renderStudentRequests(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được lịch sử đổi quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("scoreEvents").where("studentId","==",studentDocId).onSnapshot(s=>renderStudentPointHistory(s.docs.map(d=>d.data())),e=>{document.getElementById("studentPointHistory").textContent="Chưa có lịch sử điểm."; }));
 }
