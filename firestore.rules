@@ -198,6 +198,7 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.name == request.resource.data.studentName
           && exists(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId))
           && get(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId)).data.teacherUid == request.resource.data.teacherUid
+          && get(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId)).data.title == request.resource.data.assignmentTitle
           && get(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId)).data.className in ['', 'Tất cả', get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.className]
           && request.resource.data.imageUrl is string && request.resource.data.imageUrl.size() <= 650000;
       }
