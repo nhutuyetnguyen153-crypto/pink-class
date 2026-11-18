@@ -251,6 +251,8 @@ document.getElementById('addGrammar').onclick=()=>openModal('Giao bài tập','T
 document.getElementById('cancelModal').onclick=()=>modal.classList.remove('open');
 document.getElementById('saveModal').onclick=()=>{modal.classList.remove('open');showToast('Bản xem trước chưa lưu dữ liệu. Chức năng này sẽ được kết nối sau.')};
 document.getElementById('scoreHistory').addEventListener('click',()=>showToast('Lịch sử điểm được xem tại mục Báo cáo.'));
+let lastStudentAssignmentList=[];
+setInterval(()=>{if(activeStudentUid&&activeStudentProfile){renderStudentAssignments(lastStudentAssignmentList,activeStudentProfile);renderStudentVocabulary(studentVocabRecords,activeStudentProfile);}if(currentTeacherUid)renderAssignments();},60000);
 function showToast(message){toast.textContent=message;toast.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.style.display='none',2800)}
 let currentTeacherUid = null;
 let studentsUnsubscribe = null;
@@ -479,6 +481,7 @@ function startStudentPortal(uid,profile,studentDocId=uid){
  studentPortalUnsubs.push(db.collection("studentRequests").where("studentUid","==",uid).onSnapshot(s=>renderStudentPermissionHistory(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được yêu cầu xin phép: "+e.code)));
 }
 function renderStudentAssignments(list,profile){
+ lastStudentAssignmentList=list;
  const host=document.getElementById("studentAssignments");host.textContent="";
  const visible=list.filter(x=>!x.className||!profile.className||x.className===profile.className||x.className==="Tất cả");
  if(!visible.length){host.textContent="Hiện chưa có bài tập dành cho lớp của em.";return;}
@@ -566,7 +569,7 @@ function renderVocab(){
  if(!vocabRecords.length){body.innerHTML='<tr><td colspan="5" class="empty">Chưa có bộ từ vựng.</td></tr>';return;}
  vocabRecords.forEach(x=>{const n=(x.words||'').split(/\n/).filter(Boolean).length;const tr=document.createElement('tr');tr.innerHTML='<td>'+esc(x.title)+'</td><td>'+esc(x.className||'Tất cả')+'</td><td>'+n+'</td><td>'+dateText(x.updatedAt)+'</td><td><div class="student-actions"><button data-edit="'+x.id+'">Sửa</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
 }
-function renderTeacherProgress(){const host=document.getElementById('teacherProgress');if(!host)return;host.textContent='';if(!teacherProgressEvents.length){host.textContent='Chưa có dữ liệu tiến độ.';return;}const byStudent={};teacherProgressEvents.forEach(x=>{(byStudent[x.studentId]??=[]).push(x.dayKey);});Object.entries(byStudent).forEach(([id,days])=>{const st=studentRecords.find(x=>x.id===id);const row=document.createElement('div');row.className='request-row';row.textContent=(st?.name||id)+' · '+streakFromDays([...new Set(days)].sort())+' ngày liên tiếp';host.appendChild(row);});}
+function renderTeacherProgress(){const host=document.getElementById('teacherProgress');if(!host)return;host.textContent='';if(!studentRecords.length){host.textContent='Chưa có học sinh.';return;}const now=new Date(),weekStart=new Date(now);weekStart.setDate(now.getDate()-((now.getDay()+6)%7));const weekDays=Array.from({length:7},(_,i)=>{const d=new Date(weekStart);d.setDate(d.getDate()+i);return localDayKey(d);});const monthPrefix=localDayKey(new Date(now.getFullYear(),now.getMonth(),1)).slice(0,7);studentRecords.forEach(st=>{const days=[...new Set([...submissionRecords.filter(x=>x.studentId===st.id&&x.createdAt?.toDate).map(x=>localDayKey(x.createdAt.toDate())),...scoreEventRecords.filter(x=>x.studentId===st.id&&x.createdAt?.toDate&&Number(x.points)>0).map(x=>localDayKey(x.createdAt.toDate()))])];const row=document.createElement('div');row.className='request-row';row.textContent=st.name+' · '+streakFromDays(days)+' ngày 🔥 · Tuần '+weekDays.filter(d=>days.includes(d)).length+'/7 · Tháng '+days.filter(d=>d.startsWith(monthPrefix)).length+' ngày';host.appendChild(row);});}
 function renderTeacherPermissions(){
  const body=document.getElementById("permissionBody");if(!body)return;body.textContent="";
  if(!permissionRecords.length){body.innerHTML='<tr><td colspan="6" class="empty">Chưa có yêu cầu xin phép.</td></tr>';return;}
@@ -619,12 +622,14 @@ function renderAnalytics(){
  if(!leaders.length)top.textContent='Chưa có hồ sơ học sinh.';
  leaders.forEach(x=>{const item=document.createElement('div');item.className='student';const av=document.createElement('div');av.className='student-avatar';av.textContent=(x.name||'?').slice(0,1).toUpperCase();const info=document.createElement('div');info.className='student-info';const name=document.createElement('b');name.textContent=x.name;const meta=document.createElement('small');meta.textContent=x.streak+' ngày streak';info.append(name,meta);const score=document.createElement('div');score.className='score';score.textContent=x.total+' ⭐';item.append(av,info,score);top.appendChild(item);});
 }
+async function reconcileTeacherPoints(){if(!currentTeacherUid)return;for(const sub of submissionRecords){if(sub.pointsAwarded||!sub.studentId||sub.status!=='submitted')continue;try{await db.runTransaction(async tx=>{const sr=db.collection('submissions').doc(sub.id),st=db.collection('students').doc(sub.studentId),ev=db.collection('scoreEvents').doc('submit10_'+sub.id);const [ss,ps,es]=await Promise.all([tx.get(sr),tx.get(st),tx.get(ev)]);if(!ss.exists||!ps.exists||es.exists||ss.data().pointsAwarded)return;tx.update(st,{pointsBalance:Number(ps.data().pointsBalance||0)+10,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});tx.set(ev,{teacherUid:currentTeacherUid,studentId:sub.studentId,submissionId:sub.id,points:10,note:'Thưởng nộp ảnh bài tập thành công',createdAt:firebase.firestore.FieldValue.serverTimestamp()});tx.update(sr,{pointsAwarded:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});}catch(e){console.warn('Điểm thưởng chờ đồng bộ',sub.id,e.code||e.message);}}}
+async function cleanupExpiredSubmissionImages(){if(!currentTeacherUid)return;const cutoff=Date.now()-7*86400000;for(const sub of submissionRecords){if(!sub.imageUrl||!sub.createdAt?.toDate||sub.createdAt.toDate().getTime()>cutoff)continue;try{await db.collection('submissions').doc(sub.id).update({imageUrl:'',imageDeletedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}catch(e){console.warn('Dọn ảnh chờ đồng bộ',sub.id,e.code||e.message);}}}
 function startDataListeners(){
  stopDataListeners();
  listenCollection('vocabularySets',x=>{vocabRecords=x;renderVocab();renderAnalytics();});
  listenCollection('assignments',x=>{assignmentRecords=x;renderAssignments();renderAnalytics();});
- listenCollection('submissions',x=>{submissionRecords=x;renderSubmissions();renderAnalytics();});
- listenCollection('scoreEvents',x=>{scoreEventRecords=x;renderAnalytics();});
+ listenCollection('submissions',x=>{submissionRecords=x;renderSubmissions();renderAnalytics();reconcileTeacherPoints();cleanupExpiredSubmissionImages();});
+ listenCollection('scoreEvents',x=>{scoreEventRecords=x;renderAnalytics();renderTeacherProgress();});
  listenCollection('studentRequests',x=>{permissionRecords=x.sort((a,b)=>(b.requestedAt?.toMillis?.()||0)-(a.requestedAt?.toMillis?.()||0));renderTeacherPermissions();});
  listenCollection('learningProgress',x=>{teacherProgressEvents=x;renderTeacherProgress();});
 }
