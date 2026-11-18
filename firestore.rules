@@ -8,6 +8,20 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
     }
     function owns(data) { return isTeacher() && data.teacherUid == request.auth.uid; }
+    function studentOwns(studentUid) {
+      return signedIn()
+        && studentUid == request.auth.uid
+        && exists(/databases/$(database)/documents/students/$(request.auth.uid))
+        && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.authUid == request.auth.uid
+        && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.status == 'active';
+    }
+    function studentOfTeacher(teacherUid) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/students/$(request.auth.uid))
+        && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.authUid == request.auth.uid
+        && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.teacherUid == teacherUid
+        && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.status == 'active';
+    }
 
     match /users/{userId} {
       allow get: if signedIn() && (request.auth.uid == userId || isTeacher());
@@ -16,26 +30,82 @@ service cloud.firestore {
       allow update: if isTeacher() && request.resource.data.role == resource.data.role;
       allow delete: if false;
     }
+
     match /students/{studentId} {
       function validStudentData() {
-        return request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','createdAt','updatedAt'])
-          && request.resource.data.keys().hasAll(['name','email','className','status','notes','teacherUid','updatedAt'])
+        return request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','createdAt','updatedAt'])
+          && request.resource.data.keys().hasAll(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','updatedAt'])
           && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
           && request.resource.data.email is string && request.resource.data.email.size() <= 160
           && request.resource.data.className is string && request.resource.data.className.size() <= 60
           && request.resource.data.notes is string && request.resource.data.notes.size() <= 1000
           && request.resource.data.status in ['active','paused']
-          && request.resource.data.teacherUid == request.auth.uid;
+          && request.resource.data.teacherUid == request.auth.uid
+          && request.resource.data.authUid is string
+          && request.resource.data.pointsBalance is number && request.resource.data.pointsBalance >= 0;
       }
-      allow read: if owns(resource.data);
+      allow get: if (isTeacher() && owns(resource.data)) || (signedIn() && request.auth.uid == studentId && resource.data.authUid == request.auth.uid);
+      allow list: if isTeacher();
       allow create: if isTeacher() && validStudentData()
+        && request.resource.data.authUid == studentId
+        && request.resource.data.pointsBalance == 0
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if owns(resource.data) && validStudentData()
         && request.resource.data.teacherUid == resource.data.teacherUid
+        && request.resource.data.authUid == resource.data.authUid
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.updatedAt == request.time;
       allow delete: if owns(resource.data);
     }
+
+    match /rewards/{rewardId} {
+      allow read: if owns(resource.data) || studentOfTeacher(resource.data.teacherUid);
+      allow create: if isTeacher() && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100
+        && request.resource.data.pointsCost is int && request.resource.data.pointsCost > 0
+        && request.resource.data.imageData is string && request.resource.data.imageData.size() <= 650000
+        && request.resource.data.active == true
+        && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100
+        && request.resource.data.pointsCost is int && request.resource.data.pointsCost > 0
+        && request.resource.data.imageData is string && request.resource.data.imageData.size() <= 650000
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if owns(resource.data);
+    }
+
+    match /redemptions/{redemptionId} {
+      allow read: if owns(resource.data) || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn()
+        && studentOwns(request.auth.uid)
+        && request.resource.data.keys().hasOnly(['studentUid','studentId','studentName','teacherUid','rewardId','rewardTitle','pointsCost','status','requestedAt'])
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentId == request.auth.uid
+        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.auth.uid)).data.teacherUid
+        && request.resource.data.rewardId is string
+        && exists(/databases/$(database)/documents/rewards/$(request.resource.data.rewardId))
+        && get(/databases/$(database)/documents/rewards/$(request.resource.data.rewardId)).data.teacherUid == request.resource.data.teacherUid
+        && get(/databases/$(database)/documents/rewards/$(request.resource.data.rewardId)).data.active == true
+        && get(/databases/$(database)/documents/rewards/$(request.resource.data.rewardId)).data.pointsCost == request.resource.data.pointsCost
+        && request.resource.data.studentName == get(/databases/$(database)/documents/students/$(request.auth.uid)).data.name
+        && request.resource.data.rewardTitle == get(/databases/$(database)/documents/rewards/$(request.resource.data.rewardId)).data.title
+        && request.resource.data.status == 'pending'
+        && request.resource.data.requestedAt == request.time;
+      allow update: if isTeacher() && owns(resource.data)
+        && resource.data.status == 'pending'
+        && request.resource.data.status in ['approved','rejected']
+        && request.resource.data.studentUid == resource.data.studentUid
+        && request.resource.data.teacherUid == resource.data.teacherUid
+        && request.resource.data.rewardId == resource.data.rewardId
+        && request.resource.data.pointsCost == resource.data.pointsCost
+        && request.resource.data.requestedAt == resource.data.requestedAt
+        && request.resource.data.processedBy == request.auth.uid
+        && request.resource.data.processedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','processedBy','processedAt']);
+      allow delete: if false;
+    }
+
     match /vocabularySets/{docId} {
       allow read: if owns(resource.data);
       allow create: if isTeacher() && owns(request.resource.data)
@@ -87,7 +157,7 @@ service cloud.firestore {
       allow delete: if owns(resource.data);
     }
     match /scoreEvents/{docId} {
-      allow read: if owns(resource.data);
+      allow read: if owns(resource.data) || (signedIn() && resource.data.studentId == request.auth.uid);
       allow create: if isTeacher() && owns(request.resource.data)
         && request.resource.data.studentId is string
         && request.resource.data.submissionId is string
