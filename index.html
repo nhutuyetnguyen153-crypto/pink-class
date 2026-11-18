@@ -91,11 +91,11 @@ body:not(.authenticated) .app{display:none}
     </div>
     <div class="content-grid">
       <div class="card"><div class="card-head"><div><h3>Nhiệm vụ gần đây</h3><div class="sub">Theo dõi tình hình bài tập của lớp</div></div><button class="linkbtn" data-go="grammar">Xem tất cả →</button></div>
-        <div class="empty">Nhiệm vụ thật sẽ hiển thị tại mục Bài tập ngữ pháp sau khi cô tạo dữ liệu.</div>
+        <div id="dashRecentAssignments"><div class="empty">Đang tải nhiệm vụ...</div></div>
       </div>
       <div class="card"><div class="card-head"><div><h3>Học sinh nổi bật</h3><div class="sub">Điểm tích lũy minh họa</div></div><button class="linkbtn" data-go="scores">Bảng điểm →</button></div>
-        <div class="empty">Bảng điểm thật sẽ được tổng hợp từ các bài đã chấm.</div>
-        <div class="progress-wrap"><div class="progress-label"><span>Tiến độ chung tuần này</span><b>72%</b></div><div class="progress"><span></span></div></div>
+        <div id="dashTopStudents"><div class="empty">Đang tải bảng điểm...</div></div>
+        
       </div>
     </div>
   </section>
@@ -129,7 +129,7 @@ body:not(.authenticated) .app{display:none}
   <section class="page" id="page-scores">
     <div class="notice">Điểm được tổng hợp từ các lần chấm bài. Streak tự động chưa được bật vì học sinh chưa có tài khoản hoạt động độc lập.</div>
     <div class="toolbar"><div><h3>Điểm thưởng & streak</h3><div class="sub">Theo dõi động lực học tập của từng bạn</div></div><button class="secondary" id="scoreHistory">Lịch sử điểm</button></div>
-    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Tổng điểm</th><th>Số bài đã chấm</th></tr></thead><tbody id="scoresBody"><tr><td colspan="3">Đang tải...</td></tr></tbody></table></div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Tổng điểm</th><th>Số bài đã chấm</th><th>Streak</th></tr></thead><tbody id="scoresBody"><tr><td colspan="3">Đang tải...</td></tr></tbody></table></div>
   </section>
 
   <section class="page" id="page-rewards"><div class="notice">Học sinh gửi yêu cầu đổi quà; giáo viên xác nhận để trừ điểm.</div><div class="toolbar"><div><h3>Kho quà tặng</h3><div class="sub">Đăng ảnh, đặt tên và điểm đổi quà</div></div><button class="primary" id="addReward" type="button">＋ Thêm quà</button></div><div class="reward-grid" id="teacherRewardGrid"><div class="empty">Đang tải quà...</div></div><div class="toolbar" style="margin-top:24px"><div><h3>Yêu cầu đổi quà</h3></div></div><div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Quà</th><th>Điểm</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="redemptionsBody"><tr><td colspan="5">Đang tải...</td></tr></tbody></table></div></section>
@@ -229,6 +229,7 @@ document.getElementById("studentSignOut").addEventListener("click",()=>{stopStud
 const titles={dashboard:"Tổng quan lớp học",students:"Danh sách học sinh",vocabulary:"Ôn tập từ vựng",grammar:"Bài tập ngữ pháp",submissions:"Bài nộp",scores:"Điểm & streak",rewards:"Kho quà & đổi quà",reports:"Báo cáo học tập"};
 function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));document.getElementById('pageTitle').textContent=titles[name];document.getElementById('sidebar').classList.remove('show');}
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+document.querySelector('.eyebrow').textContent=new Intl.DateTimeFormat('vi-VN',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(new Date()).toLocaleUpperCase('vi-VN');
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
 document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('show'));
 const modal=document.getElementById('modal'),input=document.getElementById('modalInput'),toast=document.getElementById('toast');
@@ -513,9 +514,9 @@ function renderStudentRequests(list){
 }
 
 let dataUnsubs=[];
-let vocabRecords=[], assignmentRecords=[], submissionRecords=[], rewardRecords=[], redemptionRecords=[];
+let vocabRecords=[], assignmentRecords=[], submissionRecords=[], rewardRecords=[], redemptionRecords=[], scoreEventRecords=[];
 // Ảnh quà được nén ở trình duyệt và lưu trong Firestore; không cần dịch vụ lưu ảnh ngoài.
-function stopDataListeners(){dataUnsubs.forEach(fn=>fn());dataUnsubs=[];vocabRecords=[];assignmentRecords=[];submissionRecords=[];}
+function stopDataListeners(){dataUnsubs.forEach(fn=>fn());dataUnsubs=[];vocabRecords=[];assignmentRecords=[];submissionRecords=[];scoreEventRecords=[];}
 function listenCollection(name,callback){
  const unsub=db.collection(name).where('teacherUid','==',currentTeacherUid).onSnapshot(snap=>{callback(snap.docs.map(d=>({id:d.id,...d.data()})));},err=>showToast('Lỗi tải '+name+': '+err.code));
  dataUnsubs.push(unsub);
@@ -548,15 +549,30 @@ function renderAnalytics(){
  document.getElementById('reportVocab').textContent=vocabRecords.length;
  document.getElementById('reportAssignments').textContent=assignmentRecords.length;
  document.getElementById('reportGraded').textContent=graded.length;
- const rows=studentRecords.map(st=>{const list=graded.filter(x=>x.studentId===st.id);return {name:st.name,count:list.length,avg:list.length?Math.round(list.reduce((a,x)=>a+x.score,0)/list.length):0,total:Number(st.pointsBalance??list.reduce((a,x)=>a+x.score,0))};});
- document.getElementById('scoresBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+' ⭐</td><td>'+x.count+'</td></tr>').join(''):'<tr><td colspan="3" class="empty">Chưa có học sinh.</td></tr>';
+ const rows=studentRecords.map(st=>{
+  const list=graded.filter(x=>x.studentId===st.id);
+  const days=[...new Set(scoreEventRecords.filter(e=>e.studentId===st.id&&Number(e.points)>0&&e.createdAt?.toDate).map(e=>e.createdAt.toDate().toISOString().slice(0,10)))].sort().reverse();
+  let streak=0;const now=new Date();now.setHours(0,0,0,0);
+  if(days.length){const latest=days[0],today=now.toISOString().slice(0,10),yesterday=new Date(now.getTime()-86400000).toISOString().slice(0,10);if(latest===today||latest===yesterday){let cursor=new Date(latest+'T00:00:00');for(const d of days){if(d===cursor.toISOString().slice(0,10)){streak++;cursor.setDate(cursor.getDate()-1);}else break;}}}
+  return {name:st.name,count:list.length,avg:list.length?Math.round(list.reduce((a,x)=>a+x.score,0)/list.length):0,total:Number(st.pointsBalance??list.reduce((a,x)=>a+x.score,0)),streak};
+ });
+ document.getElementById('scoresBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+' ⭐</td><td>'+x.count+'</td><td>'+x.streak+' ngày 🔥</td></tr>').join(''):'<tr><td colspan="4" class="empty">Chưa có học sinh.</td></tr>';
  document.getElementById('reportBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.count+'</td><td>'+(x.count?x.avg+'/100':'—')+'</td><td>'+x.total+'</td></tr>').join(''):'<tr><td colspan="4" class="empty">Chưa có dữ liệu.</td></tr>';
+ const recent=document.getElementById('dashRecentAssignments');recent.textContent='';
+ const upcoming=assignmentRecords.slice().sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')).slice(0,4);
+ if(!upcoming.length)recent.textContent='Chưa có bài tập nào được giao.';
+ upcoming.forEach(a=>{const item=document.createElement('div');item.className='task';const ico=document.createElement('div');ico.className='task-icon';ico.textContent='📘';const info=document.createElement('div');info.className='task-info';const name=document.createElement('b');name.textContent=a.title;const meta=document.createElement('small');meta.textContent=(a.className||'Tất cả lớp')+' · Hạn: '+(a.dueDate||'Chưa đặt');info.append(name,meta);item.append(ico,info);recent.appendChild(item);});
+ const top=document.getElementById('dashTopStudents');top.textContent='';
+ const leaders=rows.slice().sort((a,b)=>b.total-a.total).slice(0,4);
+ if(!leaders.length)top.textContent='Chưa có hồ sơ học sinh.';
+ leaders.forEach(x=>{const item=document.createElement('div');item.className='student';const av=document.createElement('div');av.className='student-avatar';av.textContent=(x.name||'?').slice(0,1).toUpperCase();const info=document.createElement('div');info.className='student-info';const name=document.createElement('b');name.textContent=x.name;const meta=document.createElement('small');meta.textContent=x.streak+' ngày streak';info.append(name,meta);const score=document.createElement('div');score.className='score';score.textContent=x.total+' ⭐';item.append(av,info,score);top.appendChild(item);});
 }
 function startDataListeners(){
  stopDataListeners();
  listenCollection('vocabularySets',x=>{vocabRecords=x;renderVocab();renderAnalytics();});
  listenCollection('assignments',x=>{assignmentRecords=x;renderAssignments();renderAnalytics();});
  listenCollection('submissions',x=>{submissionRecords=x;renderSubmissions();renderAnalytics();});
+ listenCollection('scoreEvents',x=>{scoreEventRecords=x;renderAnalytics();});
 }
 async function createOrEditRecord(collection,old){
  const vocab=collection==='vocabularySets';
