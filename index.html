@@ -311,7 +311,7 @@ async function adjustStudentPoints(student){
  const raw=prompt('Nhập số điểm cộng hoặc trừ (ví dụ 10 hoặc -5):','10');if(raw===null)return;
  const delta=Number(raw);if(!Number.isSafeInteger(delta)||delta===0||Math.abs(delta)>10000){showToast('Nhập số nguyên khác 0, tối đa 10.000 điểm.');return;}
  const note=prompt('Lý do điều chỉnh điểm:','Điều chỉnh bởi giáo viên');if(note===null)return;
- try{const ref=db.collection('students').doc(student.id);await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error('student_missing');const balance=Number(snap.data().pointsBalance||0);if(balance+delta<0)throw new Error('negative_balance');tx.update(ref,{pointsBalance:balance+delta,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});
+ try{const ref=db.collection('students').doc(student.id);await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error('student_missing');const balance=typeof snap.data().pointsBalance==='number'?snap.data().pointsBalance:submissionRecords.filter(x=>x.studentId===student.id&&typeof x.score==='number').reduce((sum,x)=>sum+x.score,0);if(balance+delta<0)throw new Error('negative_balance');tx.update(ref,{pointsBalance:balance+delta,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});
  await db.collection('scoreEvents').add({teacherUid:currentTeacherUid,studentId:student.id,submissionId:'manual-adjustment',points:delta,note:note.slice(0,200),createdAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã cập nhật điểm.');}
  catch(e){showToast(e.message==='negative_balance'?'Không thể trừ nhiều hơn số điểm hiện có.':'Không cập nhật được điểm: '+(e.code||e.message));}
 }
@@ -336,7 +336,7 @@ studentForm.addEventListener('submit',async event=>{
   if(!name){studentFormMessage.textContent='Vui lòng nhập họ tên học sinh.';return;}
   if(!editingStudentId&&(!email||password.length<6)){studentFormMessage.textContent="Nhập email và mật khẩu tối thiểu 6 ký tự để tạo tài khoản.";return;}
   studentSaveButton.disabled=true;studentSaveButton.textContent='Đang lưu...';studentFormMessage.textContent='';
-  const payload={name,email,className,status,notes,teacherUid:currentTeacherUid,authUid:editingStudentRecord?.authUid||"",pointsBalance:Number(editingStudentRecord?.pointsBalance||0),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  const payload={name,email,className,status,notes,teacherUid:currentTeacherUid,authUid:editingStudentRecord?.authUid||"",pointsBalance:Number(editingStudentRecord?.pointsBalance??submissionRecords.filter(x=>x.studentId===editingStudentId&&typeof x.score==='number').reduce((sum,x)=>sum+x.score,0)),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
   try{
     if(editingStudentId){await db.collection("students").doc(editingStudentId).update(payload);}
     else{
