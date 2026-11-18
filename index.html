@@ -67,6 +67,7 @@ body:not(.authenticated) .app{display:none}
       <button data-page="students"><span class="ico">♡</span> Học sinh</button>
       <button data-page="vocabulary"><span class="ico">✎</span> Ôn từ vựng</button>
       <button data-page="grammar"><span class="ico">▤</span> Bài tập ngữ pháp</button>
+      <button data-page="permissions"><span class="ico">✉</span> Xin phép & gia hạn</button>
       <button data-page="submissions"><span class="ico">▧</span> Bài nộp</button>
       <button data-page="scores"><span class="ico">☆</span> Điểm & streak</button>
       <button data-page="rewards"><span class="ico">🎁</span> Đổi quà</button>
@@ -120,6 +121,11 @@ body:not(.authenticated) .app{display:none}
     <div class="card table-wrap"><table class="data-table"><thead><tr><th>Tên bài tập</th><th>Lớp</th><th>Hạn nộp</th><th>Mô tả</th><th>Thao tác</th></tr></thead><tbody id="assignmentBody"><tr><td colspan="5">Đang tải...</td></tr></tbody></table></div>
   </section>
 
+  <section class="page" id="page-permissions">
+    <div class="notice">Yêu cầu xin gia hạn, giải trình nộp trễ và xin nghỉ học. Giáo viên duyệt hoặc từ chối; mọi yêu cầu được lưu lịch sử.</div>
+    <div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Loại yêu cầu</th><th>Bài tập / ngày nghỉ</th><th>Lý do</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="permissionBody"><tr><td colspan="6">Đang tải...</td></tr></tbody></table></div>
+  </section>
+
   <section class="page" id="page-submissions">
     <div class="notice">Học sinh nộp ảnh bài làm trực tiếp; giáo viên xem bài, nhận xét và chấm điểm tại đây.</div>
     <div class="toolbar"><div><h3>Bài nộp của học sinh</h3><div class="sub">Ghi nhận bài nộp, xem ảnh và chấm điểm</div></div><button class="primary" id="addSubmission" type="button">＋ Ghi nhận bài nộp</button></div>
@@ -141,7 +147,7 @@ body:not(.authenticated) .app{display:none}
 </main>
 </div>
 <div class="modal-backdrop" id="studentModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle"><h3 id="studentModalTitle">Thêm học sinh</h3><form id="studentForm"><div class="student-form-grid"><div class="full"><label for="studentName">Họ và tên *</label><input id="studentName" maxlength="100" required placeholder="Ví dụ: Nguyễn Minh Anh"></div><div><label for="studentEmail">Email đăng nhập *</label><input id="studentEmail" type="email" maxlength="160" placeholder="student@example.com"></div><div class="full" id="studentPasswordWrap"><label for="studentPassword">Mật khẩu ban đầu *</label><input id="studentPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Ít nhất 6 ký tự"></div><div><label for="studentClass">Lớp</label><input id="studentClass" maxlength="60" placeholder="Ví dụ: Pink 01"></div><div class="full"><label for="studentStatus">Trạng thái</label><select id="studentStatus"><option value="active">Đang học</option><option value="paused">Tạm nghỉ</option></select></div><div class="full"><label for="studentNotes">Ghi chú</label><textarea id="studentNotes" maxlength="1000" placeholder="Ghi chú dành cho giáo viên"></textarea></div></div><div class="modal-actions"><button class="secondary" id="cancelStudent" type="button">Hủy</button><button class="primary" id="saveStudent" type="submit">Lưu hồ sơ</button></div><div class="auth-message" id="studentFormMessage" role="status"></div></form></div></div>
-<div class="student-portal" id="studentPortal"><div class="student-portal-inner"><div class="student-portal-head"><div class="brand"><div class="logo">S</div><div><b>SNOW</b><small>KHU VỰC HỌC SINH</small></div></div><button class="signout-btn" id="studentSignOut" type="button">Đăng xuất</button></div><div class="student-hero"><h1 id="studentWelcome">Xin chào!</h1><p>Điểm thưởng hiện tại</p><div class="student-balance"><span id="studentPoints">0</span> ⭐</div></div><div class="student-portal-section"><h2>📚 Bài tập được giao</h2><div class="sub">Chọn bài tập và gửi ảnh bài làm</div><div id="studentAssignments"><div class="empty">Đang tải bài tập...</div></div></div><div class="student-portal-section"><h2>🎁 Quà có thể đổi</h2><div class="reward-grid" id="studentRewardGrid"><div class="empty">Đang tải quà...</div></div></div><div class="student-portal-section"><h2>📋 Yêu cầu đổi quà của em</h2><div id="studentRequests">Chưa có yêu cầu.</div></div><div class="student-portal-section"><h2>⭐ Lịch sử điểm</h2><div id="studentPointHistory">Đang tải lịch sử điểm...</div></div></div></div>
+<div class="student-portal" id="studentPortal"><div class="student-portal-inner"><div class="student-portal-head"><div class="brand"><div class="logo">S</div><div><b>SNOW</b><small>KHU VỰC HỌC SINH</small></div></div><button class="signout-btn" id="studentSignOut" type="button">Đăng xuất</button></div><div class="student-hero"><h1 id="studentWelcome">Xin chào!</h1><p>Điểm thưởng hiện tại</p><div class="student-balance"><span id="studentPoints">0</span> ⭐</div></div><div class="student-portal-section"><h2>📚 Bài tập được giao</h2><div class="sub">Chọn bài tập và gửi ảnh bài làm</div><div id="studentAssignments"><div class="empty">Đang tải bài tập...</div></div></div><div class="student-portal-section"><h2>✉️ Xin nghỉ học</h2><div class="sub">Gửi ngày nghỉ và lý do để giáo viên xem xét</div><button class="secondary" id="studentAbsenceBtn" type="button">Gửi đơn xin nghỉ học</button><div id="studentPermissionHistory"></div></div><div class="student-portal-section"><h2>🎁 Quà có thể đổi</h2><div class="reward-grid" id="studentRewardGrid"><div class="empty">Đang tải quà...</div></div></div><div class="student-portal-section"><h2>📋 Yêu cầu đổi quà của em</h2><div id="studentRequests">Chưa có yêu cầu.</div></div><div class="student-portal-section"><h2>⭐ Lịch sử điểm</h2><div id="studentPointHistory">Đang tải lịch sử điểm...</div></div></div></div>
 <div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">Tạo mới</h3><div class="field"><label id="fieldLabel">Tên</label><input id="modalInput" placeholder="Nhập thông tin"></div><div class="modal-actions"><button class="secondary" id="cancelModal">Hủy</button><button class="primary" id="saveModal">Lưu bản nháp</button></div></div></div>
 <div class="toast" id="toast">Đã cập nhật.</div>
 
@@ -429,7 +435,8 @@ async function compressRewardImage(file){
  if(data.length>650000)throw new Error("Ảnh quá lớn sau khi nén. Hãy chọn ảnh khác.");
  return data;
 }
-document.getElementById("addReward").addEventListener("click",()=>{
+document.getElementById("studentAbsenceBtn").addEventListener("click",()=>sendStudentRequest("absence",null));
+ document.getElementById("addReward").addEventListener("click",()=>{
  const title=prompt("Tên món quà:");if(title===null||!title.trim())return;
  const raw=prompt("Số điểm cần đổi (số nguyên dương):","50");if(raw===null)return;
  const pointsCost=Number(raw);if(!Number.isSafeInteger(pointsCost)||pointsCost<1||pointsCost>10000){showToast("Điểm đổi phải là số nguyên từ 1 đến 10.000.");return;}
@@ -461,6 +468,7 @@ function startStudentPortal(uid,profile,studentDocId=uid){
  studentPortalUnsubs.push(db.collection("rewards").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentRewards(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("redemptions").where("studentUid","==",uid).onSnapshot(s=>renderStudentRequests(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được lịch sử đổi quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("scoreEvents").where("studentId","==",studentDocId).onSnapshot(s=>renderStudentPointHistory(s.docs.map(d=>d.data())),e=>{document.getElementById("studentPointHistory").textContent="Chưa có lịch sử điểm."; }));
+ studentPortalUnsubs.push(db.collection("studentRequests").where("studentUid","==",uid).onSnapshot(s=>renderStudentPermissionHistory(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được yêu cầu xin phép: "+e.code)));
 }
 function renderStudentAssignments(list,profile){
  const host=document.getElementById("studentAssignments");host.textContent="";
@@ -470,7 +478,8 @@ function renderStudentAssignments(list,profile){
   const row=document.createElement("div");row.className="request-row";
   const title=document.createElement("b");title.textContent=item.title||"Bài tập";
   const desc=document.createElement("div");desc.textContent=item.description||"Không có mô tả";
-  const due=document.createElement("small");due.textContent="Hạn nộp: "+(item.dueDate||"Chưa đặt hạn");
+  const due=document.createElement("small");due.textContent="Hạn nộp: "+(item.dueDate?new Date(item.dueDate.length===10?item.dueDate+'T23:59:59':item.dueDate).toLocaleString('vi-VN'):'Chưa đặt hạn')+' · '+deadlineLabel(item.dueDate);
+  const actionWrap=document.createElement("div");actionWrap.style.display="flex";actionWrap.style.flexWrap="wrap";actionWrap.style.gap="7px";
   const btn=document.createElement("button");btn.className="secondary";btn.type="button";btn.textContent="Gửi ảnh bài làm";
   btn.addEventListener("click",()=>{
    const picker=document.createElement("input");picker.type="file";picker.accept="image/jpeg,image/png,image/webp";
@@ -478,15 +487,30 @@ function renderStudentAssignments(list,profile){
     try{
      btn.disabled=true;btn.textContent="Đang xử lý ảnh...";
      const imageUrl=await compressRewardImage(file);
-     await db.collection("submissions").add({teacherUid:profile.teacherUid,studentId:activeStudentDocId,studentName:profile.name||"Học sinh",studentUid:activeStudentUid,assignmentId:item.id,assignmentTitle:item.title||"Bài tập",imageUrl,note:"",status:"submitted",score:null,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+     const deadline=deadlineDate(item.dueDate);const isLate=!!deadline&&Date.now()>deadline.getTime();
+     await db.collection("submissions").add({teacherUid:profile.teacherUid,studentId:activeStudentDocId,studentName:profile.name||"Học sinh",studentUid:activeStudentUid,assignmentId:item.id,assignmentTitle:item.title||"Bài tập",imageUrl,note:"",status:"submitted",isLate,submittedAt:firebase.firestore.FieldValue.serverTimestamp(),score:null,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
      showToast("Đã nộp bài thành công.");
     }catch(e){showToast("Không nộp được bài: "+(e.code||e.message));}
     finally{btn.disabled=false;btn.textContent="Gửi ảnh bài làm";}
    };picker.click();
   });
-  row.append(title,desc,due,document.createElement("br"),btn);host.appendChild(row);
+  const extend=document.createElement("button");extend.className="secondary";extend.textContent="Xin gia hạn";extend.onclick=()=>sendStudentRequest("extension",item);
+  const explain=document.createElement("button");explain.className="secondary";explain.textContent="Giải trình nộp trễ";explain.onclick=()=>sendStudentRequest("late_explanation",item);
+  actionWrap.append(btn,extend,explain);row.append(title,desc,due,document.createElement("br"),actionWrap);host.appendChild(row);
  });
 }
+function deadlineDate(value){if(!value)return null;const d=new Date(value.length===10?value+"T23:59:59":value);return Number.isNaN(d.getTime())?null:d;}
+function deadlineLabel(value){const d=deadlineDate(value);if(!d)return "Chưa đặt hạn";const ms=d.getTime()-Date.now();if(ms<=0)return "ĐÃ QUÁ HẠN";const days=Math.floor(ms/86400000),hours=Math.floor(ms%86400000/3600000),mins=Math.floor(ms%3600000/60000);return "Còn "+(days?days+" ngày ":"")+(hours?hours+" giờ ":"")+mins+" phút";}
+async function sendStudentRequest(type,assignment){
+ const labels={extension:"Xin gia hạn",late_explanation:"Giải trình nộp trễ",absence:"Xin nghỉ học"};
+ let requestedDueDate="",absenceDate="";
+ if(type==="extension"){requestedDueDate=prompt("Muốn gia hạn đến thời điểm nào? (YYYY-MM-DDTHH:mm)","");if(!requestedDueDate)return;if(!deadlineDate(requestedDueDate)){showToast("Thời gian chưa đúng định dạng.");return;}}
+ if(type==="absence"){absenceDate=prompt("Ngày xin nghỉ (YYYY-MM-DD):","");if(!absenceDate)return;}
+ const reason=prompt("Nhập lý do gửi giáo viên:","");if(reason===null||!reason.trim())return;
+ try{await db.collection("studentRequests").add({teacherUid:activeStudentProfile.teacherUid,studentUid:activeStudentUid,studentId:activeStudentDocId,studentName:activeStudentProfile.name||"Học sinh",type,assignmentId:assignment?.id||"",assignmentTitle:assignment?.title||"",requestedDueDate,absenceDate,reason:reason.trim(),status:"pending",requestedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast("Đã gửi "+labels[type].toLowerCase()+".");}
+ catch(e){showToast("Không gửi được yêu cầu: "+(e.code||e.message));}
+}
+function renderStudentPermissionHistory(list){const host=document.getElementById("studentPermissionHistory");host.textContent="";list.sort((a,b)=>(b.requestedAt?.toMillis?.()||0)-(a.requestedAt?.toMillis?.()||0)).forEach(x=>{const d=document.createElement("div");d.className="request-row";d.textContent=({extension:"Xin gia hạn",late_explanation:"Giải trình nộp trễ",absence:"Xin nghỉ học"}[x.type]||"Yêu cầu")+" · "+(x.status==="pending"?"Đang chờ":x.status==="approved"?"Đã duyệt":"Đã từ chối")+(x.teacherNote?" · "+x.teacherNote:"");host.appendChild(d);});if(!list.length)host.textContent="Chưa có yêu cầu nào.";}
 function renderStudentPoints(profile){document.getElementById("studentPoints").textContent=String(Number(profile.pointsBalance||0));}
 function renderStudentRewards(list){
  const grid=document.getElementById("studentRewardGrid");grid.textContent="";
@@ -514,9 +538,9 @@ function renderStudentRequests(list){
 }
 
 let dataUnsubs=[];
-let vocabRecords=[], assignmentRecords=[], submissionRecords=[], rewardRecords=[], redemptionRecords=[], scoreEventRecords=[];
+let vocabRecords=[], assignmentRecords=[], submissionRecords=[], rewardRecords=[], redemptionRecords=[], scoreEventRecords=[], permissionRecords=[];
 // Ảnh quà được nén ở trình duyệt và lưu trong Firestore; không cần dịch vụ lưu ảnh ngoài.
-function stopDataListeners(){dataUnsubs.forEach(fn=>fn());dataUnsubs=[];vocabRecords=[];assignmentRecords=[];submissionRecords=[];scoreEventRecords=[];}
+function stopDataListeners(){dataUnsubs.forEach(fn=>fn());dataUnsubs=[];vocabRecords=[];assignmentRecords=[];submissionRecords=[];scoreEventRecords=[];permissionRecords=[];}
 function listenCollection(name,callback){
  const unsub=db.collection(name).where('teacherUid','==',currentTeacherUid).onSnapshot(snap=>{callback(snap.docs.map(d=>({id:d.id,...d.data()})));},err=>showToast('Lỗi tải '+name+': '+err.code));
  dataUnsubs.push(unsub);
@@ -528,15 +552,27 @@ function renderVocab(){
  if(!vocabRecords.length){body.innerHTML='<tr><td colspan="5" class="empty">Chưa có bộ từ vựng.</td></tr>';return;}
  vocabRecords.forEach(x=>{const n=(x.words||'').split(/\n/).filter(Boolean).length;const tr=document.createElement('tr');tr.innerHTML='<td>'+esc(x.title)+'</td><td>'+esc(x.className||'Tất cả')+'</td><td>'+n+'</td><td>'+dateText(x.updatedAt)+'</td><td><div class="student-actions"><button data-edit="'+x.id+'">Sửa</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
 }
+function renderTeacherPermissions(){
+ const body=document.getElementById("permissionBody");if(!body)return;body.textContent="";
+ if(!permissionRecords.length){body.innerHTML='<tr><td colspan="6" class="empty">Chưa có yêu cầu xin phép.</td></tr>';return;}
+ permissionRecords.forEach(item=>{const tr=document.createElement("tr");const kind={extension:"Xin gia hạn",late_explanation:"Giải trình nộp trễ",absence:"Xin nghỉ học"}[item.type]||"Yêu cầu";const target=item.type==="absence"?(item.absenceDate||"—"):(item.assignmentTitle||"—");[item.studentName||"Học sinh",kind,target,item.reason||"—",item.status==="pending"?"Chờ duyệt":item.status==="approved"?"Đã duyệt":"Đã từ chối"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td);});const td=document.createElement("td");if(item.status==="pending"){const yes=document.createElement("button");yes.className="secondary";yes.textContent="Duyệt";yes.onclick=()=>processStudentRequest(item,true);const no=document.createElement("button");no.className="secondary";no.textContent="Từ chối";no.style.marginLeft="6px";no.onclick=()=>processStudentRequest(item,false);td.append(yes,no);}else td.textContent=item.teacherNote||"Đã xử lý";tr.appendChild(td);body.appendChild(tr);});
+}
+async function processStudentRequest(item,approve){
+ const teacherNote=prompt(approve?"Ghi chú khi duyệt (không bắt buộc):":"Lý do từ chối:","")??"";
+ try{const changes={status:approve?"approved":"rejected",teacherNote,processedAt:firebase.firestore.FieldValue.serverTimestamp(),processedBy:currentTeacherUid};
+  if(approve&&item.type==="extension"){if(!item.requestedDueDate||!deadlineDate(item.requestedDueDate))throw new Error("invalid_extension_date");await db.collection("assignments").doc(item.assignmentId).update({dueDate:item.requestedDueDate,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+  await db.collection("studentRequests").doc(item.id).update(changes);showToast(approve?"Đã duyệt yêu cầu.":"Đã từ chối yêu cầu.");
+ }catch(e){showToast("Không xử lý được: "+(e.code||e.message));}
+}
 function renderAssignments(){
  const body=document.getElementById('assignmentBody');body.innerHTML='';
  if(!assignmentRecords.length){body.innerHTML='<tr><td colspan="5" class="empty">Chưa có bài tập.</td></tr>';return;}
- assignmentRecords.forEach(x=>{const tr=document.createElement('tr');tr.innerHTML='<td>'+esc(x.title)+'</td><td>'+esc(x.className||'Tất cả')+'</td><td>'+esc(x.dueDate||'—')+'</td><td>'+esc(x.description||'—')+'</td><td><div class="student-actions"><button data-edit="'+x.id+'">Sửa</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
+ assignmentRecords.forEach(x=>{const tr=document.createElement('tr');tr.innerHTML='<td>'+esc(x.title)+'</td><td>'+esc(x.className||'Tất cả')+'</td><td>'+esc(x.dueDate?new Date(x.dueDate.length===10?x.dueDate+'T23:59:59':x.dueDate).toLocaleString('vi-VN')+' · '+deadlineLabel(x.dueDate):'Chưa đặt hạn')+'</td><td>'+esc(x.description||'—')+'</td><td><div class="student-actions"><button data-edit="'+x.id+'">Sửa</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
 }
 function renderSubmissions(){
  const body=document.getElementById('submissionBody');body.innerHTML='';
  if(!submissionRecords.length){body.innerHTML='<tr><td colspan="6" class="empty">Chưa có bài nộp.</td></tr>';return;}
- submissionRecords.forEach(x=>{const tr=document.createElement('tr');const image=x.imageUrl?'<a href="'+esc(x.imageUrl)+'" target="_blank" rel="noopener">Xem ảnh</a>':'—';tr.innerHTML='<td>'+esc(x.studentName)+'</td><td>'+esc(x.assignmentTitle)+'</td><td>'+image+'</td><td>'+(x.score==null?'—':esc(x.score)+'/100')+'</td><td><span class="tag '+(x.score==null?'wait':'')+'">'+(x.score==null?'Chờ chấm':'Đã chấm')+'</span></td><td><div class="student-actions"><button data-grade="'+x.id+'">Chấm</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
+ submissionRecords.forEach(x=>{const tr=document.createElement('tr');const image=x.imageUrl?'<a href="'+esc(x.imageUrl)+'" target="_blank" rel="noopener">Xem ảnh</a>':'—';tr.innerHTML='<td>'+esc(x.studentName)+'</td><td>'+esc(x.assignmentTitle)+'</td><td>'+image+'</td><td>'+(x.score==null?'—':esc(x.score)+'/100')+'</td><td><span class="tag '+(x.score==null?'wait':'')+'">'+(x.isLate?'Nộp trễ':x.score==null?'Chờ chấm':'Đã chấm')+'</span></td><td><div class="student-actions"><button data-grade="'+x.id+'">Chấm</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
 }
 function localDayKey(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
 function renderAnalytics(){
@@ -574,6 +610,7 @@ function startDataListeners(){
  listenCollection('assignments',x=>{assignmentRecords=x;renderAssignments();renderAnalytics();});
  listenCollection('submissions',x=>{submissionRecords=x;renderSubmissions();renderAnalytics();});
  listenCollection('scoreEvents',x=>{scoreEventRecords=x;renderAnalytics();});
+ listenCollection('studentRequests',x=>{permissionRecords=x.sort((a,b)=>(b.requestedAt?.toMillis?.()||0)-(a.requestedAt?.toMillis?.()||0));renderTeacherPermissions();});
 }
 async function createOrEditRecord(collection,old){
  const vocab=collection==='vocabularySets';
@@ -581,7 +618,7 @@ async function createOrEditRecord(collection,old){
  const second=prompt(vocab?'Nhập mỗi từ/cụm từ trên một dòng:':'Mô tả yêu cầu bài tập:',vocab?(old?.words||''):(old?.description||''));if(second===null)return;
  const className=prompt('Tên lớp (để trống nếu áp dụng tất cả):',old?.className||'')??'';
  const data={title:title.trim(),className:className.trim(),teacherUid:currentTeacherUid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
- if(vocab)data.words=second;else{data.description=second;data.dueDate=prompt('Hạn nộp (YYYY-MM-DD):',old?.dueDate||'')??'';}
+ if(vocab)data.words=second;else{data.description=second;data.dueDate=prompt('Hạn nộp (YYYY-MM-DDTHH:mm, giờ địa phương; ví dụ 2026-11-21T23:59):',old?.dueDate||'')??'';}
  if(!data.title){showToast('Tên không được để trống.');return;}
  try{if(old)await db.collection(collection).doc(old.id).update(data);else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection(collection).add(data);}showToast('Đã lưu dữ liệu.');}
  catch(e){showToast('Không lưu được: '+e.code);}
