@@ -238,7 +238,7 @@ document.getElementById('addVocab').onclick=()=>openModal('Tạo bộ từ vựn
 document.getElementById('addGrammar').onclick=()=>openModal('Giao bài tập','Tên bài tập');
 document.getElementById('cancelModal').onclick=()=>modal.classList.remove('open');
 document.getElementById('saveModal').onclick=()=>{modal.classList.remove('open');showToast('Bản xem trước chưa lưu dữ liệu. Chức năng này sẽ được kết nối sau.')};
-['scoreHistory','submissionFilter','exportDemo'].forEach(id=>document.getElementById(id).addEventListener('click',()=>showToast('Chức năng sẽ được hoàn thiện ở giai đoạn tiếp theo.')));
+document.getElementById('scoreHistory').addEventListener('click',()=>showToast('Lịch sử điểm được xem tại mục Báo cáo.'));
 function showToast(message){toast.textContent=message;toast.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.style.display='none',2800)}
 let currentTeacherUid = null;
 let studentsUnsubscribe = null;
@@ -557,8 +557,8 @@ document.getElementById('addSubmission').onclick=async()=>{
  const note=prompt('Ghi chú bài nộp (không bắt buộc):','')??'';
  const file=document.createElement('input');file.type='file';file.accept='image/jpeg,image/png,image/webp';file.click();
  file.onchange=async()=>{const imageFile=file.files[0];if(!imageFile)return;if(imageFile.size>5*1024*1024){showToast('Ảnh tối đa 5 MB.');return;}
- try{showToast('Đang tải ảnh lên...');const form=new FormData();form.append('file',imageFile);form.append('upload_preset',cloudinaryPreset);const response=await fetch('https://api.cloudinary.com/v1_1/'+cloudinaryCloud+'/image/upload',{method:'POST',body:form});if(!response.ok)throw new Error('upload_failed');const uploaded=await response.json();
- await db.collection('submissions').add({teacherUid:currentTeacherUid,studentId:st.id,studentName:st.name,assignmentId:as.id,assignmentTitle:as.title,imageUrl:uploaded.secure_url,note,status:'submitted',score:null,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã ghi nhận bài nộp.');}
+ try{showToast('Đang tải ảnh lên...');const imageUrl=await compressRewardImage(imageFile);
+ await db.collection('submissions').add({teacherUid:currentTeacherUid,studentId:st.id,studentName:st.name,assignmentId:as.id,assignmentTitle:as.title,imageUrl,note,status:'submitted',score:null,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã ghi nhận bài nộp.');}
  catch(err){showToast('Tải ảnh/lưu bài nộp thất bại. Kiểm tra Cloudinary preset và Firestore Rules.');}};
 };
 document.getElementById('submissionBody').addEventListener('click',async e=>{
