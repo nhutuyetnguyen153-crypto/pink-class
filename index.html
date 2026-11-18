@@ -270,8 +270,9 @@ function renderStudents(){
       const points=document.createElement("td");points.textContent=String(Number(student.pointsBalance||0))+" ⭐";
       const actions=document.createElement('td');const wrap=document.createElement('div');wrap.className='student-actions';
       const edit=document.createElement('button');edit.type='button';edit.textContent='Sửa';edit.addEventListener('click',()=>openStudentForm(student));
+      const adjust=document.createElement('button');adjust.type='button';adjust.textContent='Điểm +/-';adjust.addEventListener('click',()=>adjustStudentPoints(student));
       const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='Xóa';remove.addEventListener('click',()=>deleteStudent(student));
-      wrap.append(edit,remove);actions.appendChild(wrap);row.append(name,email,klass,status,points,actions);studentsTableBody.appendChild(row);
+      wrap.append(edit,adjust,remove);actions.appendChild(wrap);row.append(name,email,klass,status,points,actions);studentsTableBody.appendChild(row);
     });
   }
   document.getElementById('studentsCount').textContent=filtered.length+' / '+studentRecords.length+' hồ sơ';
@@ -305,6 +306,14 @@ function openStudentForm(student){
   studentFormMessage.textContent='';
   studentSaveButton.disabled=false;studentSaveButton.textContent='Lưu hồ sơ';
   studentModal.classList.add('open');document.getElementById('studentName').focus();
+}
+async function adjustStudentPoints(student){
+ const raw=prompt('Nhập số điểm cộng hoặc trừ (ví dụ 10 hoặc -5):','10');if(raw===null)return;
+ const delta=Number(raw);if(!Number.isSafeInteger(delta)||delta===0||Math.abs(delta)>10000){showToast('Nhập số nguyên khác 0, tối đa 10.000 điểm.');return;}
+ const note=prompt('Lý do điều chỉnh điểm:','Điều chỉnh bởi giáo viên');if(note===null)return;
+ try{const ref=db.collection('students').doc(student.id);await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error('student_missing');const balance=Number(snap.data().pointsBalance||0);if(balance+delta<0)throw new Error('negative_balance');tx.update(ref,{pointsBalance:balance+delta,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});
+ await db.collection('scoreEvents').add({teacherUid:currentTeacherUid,studentId:student.id,submissionId:'manual-adjustment',points:delta,note:note.slice(0,200),createdAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã cập nhật điểm.');}
+ catch(e){showToast(e.message==='negative_balance'?'Không thể trừ nhiều hơn số điểm hiện có.':'Không cập nhật được điểm: '+(e.code||e.message));}
 }
 async function deleteStudent(student){
   if(!currentTeacherUid||!confirm('Xóa hồ sơ '+student.name+'? Thao tác này không thể hoàn tác.'))return;
