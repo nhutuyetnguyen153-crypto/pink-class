@@ -81,7 +81,7 @@ service cloud.firestore {
     }
 
     match /studentAccounts/{accountUid} {
-      allow get: if signedIn() && request.auth.uid == accountUid && resource.data.authUid == request.auth.uid;
+      allow get: if signedIn() && request.auth.uid == accountUid;
       allow list: if isTeacher() && resource.data.teacherUid == request.auth.uid;
       allow create: if isTeacher()
         && request.resource.data.keys().hasOnly(['authUid','studentId','teacherUid','createdAt'])
