@@ -443,7 +443,7 @@ async function processRedemption(item,approve){
    if(!requestSnap.exists||requestSnap.data().status!=="pending")throw new Error("request_already_processed");
    if(!studentSnap.exists||studentSnap.data().teacherUid!==currentTeacherUid)throw new Error("student_not_found");
    const changes={status:approve?"approved":"rejected",processedAt:firebase.firestore.FieldValue.serverTimestamp(),processedBy:currentTeacherUid};
-   if(approve){const balance=Number(studentSnap.data().pointsBalance||0),cost=Number(requestSnap.data().pointsCost||0);if(balance<cost)throw new Error("not_enough_points");tx.update(studentRef,{pointsBalance:balance-cost,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});const eventRef=db.collection("scoreEvents").doc("redemption_"+item.id);tx.set(eventRef,{teacherUid:currentTeacherUid,studentId:item.studentId,submissionId:"redemption_"+item.id,points:-cost,note:"Đổi quà: "+(requestSnap.data().rewardTitle||"Quà tặng"),createdAt:firebase.firestore.FieldValue.serverTimestamp()});}
+   if(approve){const balance=Number(studentSnap.data().pointsBalance||0),cost=Number(requestSnap.data().pointsCost||0);if(balance<cost)throw new Error("not_enough_points");tx.update(studentRef,{pointsBalance:balance-cost,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});const eventRef=db.collection("scoreEvents").doc(item.id);tx.set(eventRef,{teacherUid:currentTeacherUid,studentId:item.studentId,submissionId:"redemption_"+item.id,points:-cost,note:"Đổi quà: "+(requestSnap.data().rewardTitle||"Quà tặng"),createdAt:firebase.firestore.FieldValue.serverTimestamp()});}
    tx.update(requestRef,changes);
   });
   showToast(approve?"Đã duyệt và trừ điểm.":"Đã từ chối yêu cầu.");
