@@ -206,7 +206,15 @@ auth.onAuthStateChanged(async (user) => {
     const studentDoc = await db.collection("students").doc(user.uid).get();
     if (studentDoc.exists && studentDoc.data().authUid === user.uid && studentDoc.data().status === "active") {
       authScreen.style.display = "none"; document.body.classList.add("student-mode");
-      startStudentPortal(user.uid, studentDoc.data()); return;
+      startStudentPortal(user.uid, studentDoc.data(), user.uid); return;
+    }
+    const accountLink = await db.collection("studentAccounts").doc(user.uid).get();
+    if (accountLink.exists && accountLink.data().authUid === user.uid) {
+      const linkedStudent = await db.collection("students").doc(accountLink.data().studentId).get();
+      if (linkedStudent.exists && linkedStudent.data().authUid === user.uid && linkedStudent.data().status === "active" && linkedStudent.data().teacherUid === accountLink.data().teacherUid) {
+        authScreen.style.display = "none"; document.body.classList.add("student-mode");
+        startStudentPortal(user.uid, linkedStudent.data(), linkedStudent.id); return;
+      }
     }
     await auth.signOut(); authMessage.textContent = "Tài khoản chưa được cấp quyền giáo viên hoặc học sinh.";
   } catch (error) {
@@ -271,6 +279,7 @@ function renderStudents(){
       const actions=document.createElement('td');const wrap=document.createElement('div');wrap.className='student-actions';
       const edit=document.createElement('button');edit.type='button';edit.textContent='Sửa';edit.addEventListener('click',()=>openStudentForm(student));
       const adjust=document.createElement('button');adjust.type='button';adjust.textContent='Điểm +/-';adjust.addEventListener('click',()=>adjustStudentPoints(student));
+      if(!student.authUid){const account=document.createElement('button');account.type='button';account.textContent='Tạo tài khoản';account.addEventListener('click',()=>createStudentLogin(student));wrap.append(account);}
       const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='Xóa';remove.addEventListener('click',()=>deleteStudent(student));
       wrap.append(edit,adjust,remove);actions.appendChild(wrap);row.append(name,email,klass,status,points,actions);studentsTableBody.appendChild(row);
     });
@@ -306,6 +315,21 @@ function openStudentForm(student){
   studentFormMessage.textContent='';
   studentSaveButton.disabled=false;studentSaveButton.textContent='Lưu hồ sơ';
   studentModal.classList.add('open');document.getElementById('studentName').focus();
+}
+async function createStudentLogin(student){
+ const email=prompt('Email đăng nhập cho '+student.name+':',student.email||'');if(email===null||!email.trim())return;
+ const password=prompt('Đặt mật khẩu ban đầu (ít nhất 6 ký tự):','');if(password===null)return;if(password.length<6){showToast('Mật khẩu cần ít nhất 6 ký tự.');return;}
+ let credential=null;
+ try{
+  credential=await provisioningAuth.createUserWithEmailAndPassword(email.trim(),password);
+  const batch=db.batch(),studentRef=db.collection('students').doc(student.id),accountRef=db.collection('studentAccounts').doc(credential.user.uid);
+  batch.update(studentRef,{authUid:credential.user.uid,email:email.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  batch.set(accountRef,{authUid:credential.user.uid,studentId:student.id,teacherUid:currentTeacherUid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  await batch.commit();await provisioningAuth.signOut();showToast('Đã tạo tài khoản học sinh.');
+ }catch(e){
+  if(credential?.user){try{await credential.user.delete();}catch(cleanupError){}try{await provisioningAuth.signOut();}catch(signoutError){}}
+  showToast('Không tạo được tài khoản: '+(e.code||e.message));
+ }
 }
 async function adjustStudentPoints(student){
  const raw=prompt('Nhập số điểm cộng hoặc trừ (ví dụ 10 hoặc -5):','10');if(raw===null)return;
@@ -356,7 +380,7 @@ modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('o
 
 
 /* Reward catalogue and student self-service portal */
-let rewardUnsubs=[], studentPortalUnsubs=[], activeStudentUid=null, activeStudentProfile=null;
+let rewardUnsubs=[], studentPortalUnsubs=[], activeStudentUid=null, activeStudentDocId=null, activeStudentProfile=null;
 function stopRewardListeners(){rewardUnsubs.forEach(fn=>fn());rewardUnsubs=[];rewardRecords=[];redemptionRecords=[];}
 function startRewardListeners(){
  stopRewardListeners();
@@ -410,7 +434,7 @@ document.getElementById("addReward").addEventListener("click",()=>{
  picker.click();
 });
 async function processRedemption(item,approve){
- const requestRef=db.collection("redemptions").doc(item.id),studentRef=db.collection("students").doc(item.studentUid);
+ const requestRef=db.collection("redemptions").doc(item.id),studentRef=db.collection("students").doc(item.studentId);
  try{
   await db.runTransaction(async tx=>{
    const [requestSnap,studentSnap]=await Promise.all([tx.get(requestRef),tx.get(studentRef)]);
@@ -423,15 +447,15 @@ async function processRedemption(item,approve){
   showToast(approve?"Đã duyệt và trừ điểm.":"Đã từ chối yêu cầu.");
  }catch(e){showToast(e.message==="not_enough_points"?"Học sinh không đủ điểm.":e.message==="request_already_processed"?"Yêu cầu đã được xử lý.":"Không xử lý được: "+(e.code||e.message));}
 }
-function stopStudentPortal(){studentPortalUnsubs.forEach(fn=>fn());studentPortalUnsubs=[];activeStudentUid=null;activeStudentProfile=null;}
-function startStudentPortal(uid,profile){
- stopStudentPortal();activeStudentUid=uid;activeStudentProfile=profile;
+function stopStudentPortal(){studentPortalUnsubs.forEach(fn=>fn());studentPortalUnsubs=[];activeStudentUid=null;activeStudentDocId=null;activeStudentProfile=null;}
+function startStudentPortal(uid,profile,studentDocId=uid){
+ stopStudentPortal();activeStudentUid=uid;activeStudentDocId=studentDocId;activeStudentProfile=profile;
  document.getElementById("studentWelcome").textContent="Xin chào, "+(profile.name||"bạn")+"!";
  renderStudentPoints(profile);
- studentPortalUnsubs.push(db.collection("students").doc(uid).onSnapshot(s=>{if(s.exists){activeStudentProfile=s.data();renderStudentPoints(activeStudentProfile);}},e=>showToast("Không tải được điểm: "+e.code)));
+ studentPortalUnsubs.push(db.collection("students").doc(studentDocId).onSnapshot(s=>{if(s.exists){activeStudentProfile=s.data();renderStudentPoints(activeStudentProfile);}},e=>showToast("Không tải được điểm: "+e.code)));
  studentPortalUnsubs.push(db.collection("rewards").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentRewards(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("redemptions").where("studentUid","==",uid).onSnapshot(s=>renderStudentRequests(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được lịch sử đổi quà: "+e.code)));
- studentPortalUnsubs.push(db.collection("scoreEvents").where("studentId","==",uid).onSnapshot(s=>renderStudentPointHistory(s.docs.map(d=>d.data())),e=>{document.getElementById("studentPointHistory").textContent="Chưa có lịch sử điểm."; }));
+ studentPortalUnsubs.push(db.collection("scoreEvents").where("studentId","==",studentDocId).onSnapshot(s=>renderStudentPointHistory(s.docs.map(d=>d.data())),e=>{document.getElementById("studentPointHistory").textContent="Chưa có lịch sử điểm."; }));
 }
 function renderStudentPoints(profile){document.getElementById("studentPoints").textContent=String(Number(profile.pointsBalance||0));}
 function renderStudentRewards(list){
@@ -444,7 +468,7 @@ function renderStudentRewards(list){
   const title=document.createElement("h4");title.textContent=item.title;
   const cost=document.createElement("p");cost.textContent=Number(item.pointsCost)+" điểm";
   const btn=document.createElement("button");btn.className="primary";btn.textContent="Gửi yêu cầu đổi";
-  btn.onclick=async()=>{if(!confirm('Gửi yêu cầu đổi "'+item.title+'" với '+item.pointsCost+" điểm?"))return;try{await db.collection("redemptions").add({studentUid:activeStudentUid,studentId:activeStudentUid,studentName:activeStudentProfile.name||"Học sinh",teacherUid:activeStudentProfile.teacherUid,rewardId:item.id,rewardTitle:item.title,pointsCost:item.pointsCost,status:"pending",requestedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast("Đã gửi yêu cầu. Chờ giáo viên xác nhận nhé!");}catch(e){showToast("Chưa gửi được yêu cầu: "+e.code);}};
+  btn.onclick=async()=>{if(!confirm('Gửi yêu cầu đổi "'+item.title+'" với '+item.pointsCost+" điểm?"))return;try{await db.collection("redemptions").add({studentUid:activeStudentUid,studentId:activeStudentDocId,studentName:activeStudentProfile.name||"Học sinh",teacherUid:activeStudentProfile.teacherUid,rewardId:item.id,rewardTitle:item.title,pointsCost:item.pointsCost,status:"pending",requestedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast("Đã gửi yêu cầu. Chờ giáo viên xác nhận nhé!");}catch(e){showToast("Chưa gửi được yêu cầu: "+e.code);}};
   card.append(img,title,cost,btn);grid.appendChild(card);
  });
 }
