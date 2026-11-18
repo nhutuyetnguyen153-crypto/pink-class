@@ -538,6 +538,7 @@ function renderSubmissions(){
  if(!submissionRecords.length){body.innerHTML='<tr><td colspan="6" class="empty">Chưa có bài nộp.</td></tr>';return;}
  submissionRecords.forEach(x=>{const tr=document.createElement('tr');const image=x.imageUrl?'<a href="'+esc(x.imageUrl)+'" target="_blank" rel="noopener">Xem ảnh</a>':'—';tr.innerHTML='<td>'+esc(x.studentName)+'</td><td>'+esc(x.assignmentTitle)+'</td><td>'+image+'</td><td>'+(x.score==null?'—':esc(x.score)+'/100')+'</td><td><span class="tag '+(x.score==null?'wait':'')+'">'+(x.score==null?'Chờ chấm':'Đã chấm')+'</span></td><td><div class="student-actions"><button data-grade="'+x.id+'">Chấm</button><button class="danger" data-del="'+x.id+'">Xóa</button></div></td>';body.appendChild(tr);});
 }
+function localDayKey(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
 function renderAnalytics(){
  const graded=submissionRecords.filter(x=>typeof x.score==='number');
  const avg=graded.length?Math.round(graded.reduce((a,x)=>a+x.score,0)/graded.length):0;
@@ -551,9 +552,9 @@ function renderAnalytics(){
  document.getElementById('reportGraded').textContent=graded.length;
  const rows=studentRecords.map(st=>{
   const list=graded.filter(x=>x.studentId===st.id);
-  const days=[...new Set(scoreEventRecords.filter(e=>e.studentId===st.id&&Number(e.points)>0&&e.createdAt?.toDate).map(e=>e.createdAt.toDate().toISOString().slice(0,10)))].sort().reverse();
+  const days=[...new Set(scoreEventRecords.filter(e=>e.studentId===st.id&&Number(e.points)>0&&e.createdAt?.toDate).map(e=>localDayKey(e.createdAt.toDate())))].sort().reverse();
   let streak=0;const now=new Date();now.setHours(0,0,0,0);
-  if(days.length){const latest=days[0],today=now.toISOString().slice(0,10),yesterday=new Date(now.getTime()-86400000).toISOString().slice(0,10);if(latest===today||latest===yesterday){let cursor=new Date(latest+'T00:00:00');for(const d of days){if(d===cursor.toISOString().slice(0,10)){streak++;cursor.setDate(cursor.getDate()-1);}else break;}}}
+  if(days.length){const latest=days[0],today=localDayKey(now),yesterday=localDayKey(new Date(now.getTime()-86400000));if(latest===today||latest===yesterday){let cursor=new Date(latest+'T00:00:00');for(const d of days){if(d===cursor.toISOString().slice(0,10)){streak++;cursor.setDate(cursor.getDate()-1);}else break;}}}
   return {name:st.name,count:list.length,avg:list.length?Math.round(list.reduce((a,x)=>a+x.score,0)/list.length):0,total:Number(st.pointsBalance??list.reduce((a,x)=>a+x.score,0)),streak};
  });
  document.getElementById('scoresBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+' ⭐</td><td>'+x.count+'</td><td>'+x.streak+' ngày 🔥</td></tr>').join(''):'<tr><td colspan="4" class="empty">Chưa có học sinh.</td></tr>';
