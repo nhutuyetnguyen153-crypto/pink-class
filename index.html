@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#fff5f8">
-<title>Pink Class — Student Learning Tracker</title>
+<title>SNOW — Student Management</title>
 <style>
 :root{--pink:#e98eae;--pink2:#f7c6d7;--pink3:#fff0f5;--ink:#493b43;--muted:#988991;--line:#f1e4e9;--bg:#fff9fb;--white:#fff;--green:#62a88a;--orange:#d69a54;--shadow:0 8px 28px rgba(112,67,86,.07)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -28,7 +28,7 @@ main{min-width:0;padding:25px clamp(16px,3vw,38px) 40px}.topbar{display:flex;ali
 body:not(.authenticated) .app{display:none}
 .auth-screen{min-height:100vh;display:grid;place-items:center;padding:22px;background:linear-gradient(145deg,#fff1f6,#fff9fb)}
 .auth-card{width:min(420px,100%);background:#fff;border:1px solid #f1e4e9;border-radius:22px;padding:28px;box-shadow:0 18px 55px #70435618}
-.auth-logo{font-size:34px;text-align:center;margin-bottom:8px}
+.auth-logo{font-size:30px;font-weight:900;letter-spacing:5px;color:#c76f91;text-align:center;margin-bottom:12px}
 .auth-card h1{font-size:23px;text-align:center;margin:0 0 6px;color:#493b43}
 .auth-card p{font-size:13px;text-align:center;color:#988991;margin:0 0 20px}
 .auth-card label{display:block;font-size:12px;font-weight:700;margin:12px 0 6px;color:#806f78}
@@ -44,8 +44,8 @@ body:not(.authenticated) .app{display:none}
 
 <div class="auth-screen" id="authScreen">
   <form class="auth-card" id="loginForm">
-    <div class="auth-logo">🌸</div>
-    <h1>Đăng nhập Pink Class</h1>
+    <div class="auth-logo">SNOW</div>
+    <h1>Đăng nhập SNOW</h1>
     <p>Dành cho giáo viên đã được cấp tài khoản</p>
     <label for="loginEmail">Email</label>
     <input id="loginEmail" type="email" autocomplete="username" required placeholder="Email giáo viên">
@@ -58,7 +58,7 @@ body:not(.authenticated) .app{display:none}
 
 <div class="app">
 <aside class="sidebar" id="sidebar">
-  <div class="brand"><div class="logo">✿</div><div><b>Pink Class</b><small>LEARN · GROW · SHINE</small></div></div>
+  <div class="brand"><div class="logo">S</div><div><b>SNOW</b><small>LEARN · GROW · SHINE</small></div></div>
   <div>
     <div class="nav-label">WORKSPACE</div>
     <nav class="nav">
@@ -71,7 +71,7 @@ body:not(.authenticated) .app{display:none}
       <button data-page="reports"><span class="ico">▥</span> Báo cáo</button>
     </nav>
   </div>
-  <div class="side-note"><b>🌷 Pink Class preview</b>Đây là bản giao diện thử nghiệm. Dữ liệu hiện tại chỉ là dữ liệu minh họa, chưa kết nối máy chủ.</div>
+  <div class="side-note"><b>❄️ SNOW preview</b>Đây là bản giao diện thử nghiệm. Dữ liệu hiện tại chỉ là dữ liệu minh họa, chưa kết nối máy chủ.</div>
 </aside>
 <main>
   <header class="topbar">
