@@ -161,6 +161,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const provisioningApp = firebase.initializeApp(firebaseConfig, "snowStudentProvisioning");
+const provisioningAuth = provisioningApp.auth();
 const authScreen = document.getElementById('authScreen');
 const loginForm = document.getElementById('loginForm');
 const authMessage = document.getElementById('authMessage');
@@ -191,33 +193,31 @@ loginForm.addEventListener('submit', async (event) => {
 });
 
 auth.onAuthStateChanged(async (user) => {
-  document.body.classList.remove('authenticated');
-  authScreen.style.display = 'grid';
-  if (!user) {
-    // Keep a useful sign-in error visible after a rejected login or role check.
-    return;
-  }
-  authMessage.textContent = 'Đang xác minh quyền giáo viên...';
+  document.body.classList.remove("authenticated","student-mode");
+  authScreen.style.display = "grid";
+  if (!user) return;
+  authMessage.textContent = "Đang xác minh tài khoản...";
   try {
-    const profile = await db.collection('users').doc(user.uid).get();
-    if (!profile.exists || profile.data().role !== 'teacher') {
-      await auth.signOut();
-      authMessage.textContent = 'Tài khoản này chưa được cấp quyền giáo viên.';
-      return;
+    const profile = await db.collection("users").doc(user.uid).get();
+    if (profile.exists && profile.data().role === "teacher") {
+      document.body.classList.add("authenticated"); authScreen.style.display = "none";
+      startStudentsListener(user.uid); startDataListeners(); startRewardListeners(); return;
     }
-    document.body.classList.add('authenticated');
-    authScreen.style.display = 'none';
-    startStudentsListener(user.uid);
-    startDataListeners();
+    const studentDoc = await db.collection("students").doc(user.uid).get();
+    if (studentDoc.exists && studentDoc.data().authUid === user.uid && studentDoc.data().status === "active") {
+      authScreen.style.display = "none"; document.body.classList.add("student-mode");
+      startStudentPortal(user.uid, studentDoc.data()); return;
+    }
+    await auth.signOut(); authMessage.textContent = "Tài khoản chưa được cấp quyền giáo viên hoặc học sinh.";
   } catch (error) {
-    await auth.signOut();
-    authMessage.textContent = 'Không thể xác minh quyền. Kiểm tra kết nối và Firestore Rules.';
+    await auth.signOut(); authMessage.textContent = "Không thể xác minh tài khoản. Kiểm tra Firestore Rules.";
   }
 });
 
-document.getElementById('signOutBtn').addEventListener('click',()=>{stopStudentsListener();auth.signOut()});
+document.getElementById("signOutBtn").addEventListener("click",()=>{stopStudentsListener();stopRewardListeners();auth.signOut()});
+document.getElementById("studentSignOut").addEventListener("click",()=>{stopStudentPortal();auth.signOut()});
 
-const titles={dashboard:"Tổng quan lớp học",students:"Danh sách học sinh",vocabulary:"Ôn tập từ vựng",grammar:"Bài tập ngữ pháp",submissions:"Bài nộp",scores:"Điểm & streak",reports:"Báo cáo học tập"};
+const titles={dashboard:"Tổng quan lớp học",students:"Danh sách học sinh",vocabulary:"Ôn tập từ vựng",grammar:"Bài tập ngữ pháp",submissions:"Bài nộp",scores:"Điểm & streak",rewards:"Kho quà & đổi quà",reports:"Báo cáo học tập"};
 function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));document.getElementById('pageTitle').textContent=titles[name];document.getElementById('sidebar').classList.remove('show');}
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
@@ -235,6 +235,7 @@ let currentTeacherUid = null;
 let studentsUnsubscribe = null;
 let studentRecords = [];
 let editingStudentId = null;
+let editingStudentRecord = null;
 const studentModal = document.getElementById('studentModal');
 const studentForm = document.getElementById('studentForm');
 const studentFormMessage = document.getElementById('studentFormMessage');
@@ -257,7 +258,7 @@ function renderStudents(){
   studentsTableBody.textContent='';
   if(!filtered.length){
     const row=document.createElement('tr'),cell=document.createElement('td');
-    cell.colSpan=5;cell.textContent=studentRecords.length?'Không tìm thấy học sinh phù hợp.':'Chưa có hồ sơ học sinh. Nhấn “Thêm học sinh” để tạo hồ sơ đầu tiên.';
+    cell.colSpan=6;cell.textContent=studentRecords.length?'Không tìm thấy học sinh phù hợp.':'Chưa có hồ sơ học sinh. Nhấn “Thêm học sinh” để tạo hồ sơ đầu tiên.';
     row.appendChild(cell);studentsTableBody.appendChild(row);
   }else{
     filtered.forEach(student=>{
@@ -266,17 +267,18 @@ function renderStudents(){
       const email=document.createElement('td');email.textContent=student.email||'—';
       const klass=document.createElement('td');klass.textContent=student.className||'—';
       const status=document.createElement('td');const tag=document.createElement('span');tag.className='tag'+(student.status==='paused'?' wait':'');tag.textContent=student.status==='paused'?'Tạm nghỉ':'Đang học';status.appendChild(tag);
+      const points=document.createElement("td");points.textContent=String(Number(student.pointsBalance||0))+" ⭐";
       const actions=document.createElement('td');const wrap=document.createElement('div');wrap.className='student-actions';
       const edit=document.createElement('button');edit.type='button';edit.textContent='Sửa';edit.addEventListener('click',()=>openStudentForm(student));
       const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='Xóa';remove.addEventListener('click',()=>deleteStudent(student));
-      wrap.append(edit,remove);actions.appendChild(wrap);row.append(name,email,klass,status,actions);studentsTableBody.appendChild(row);
+      wrap.append(edit,remove);actions.appendChild(wrap);row.append(name,email,klass,status,points,actions);studentsTableBody.appendChild(row);
     });
   }
   document.getElementById('studentsCount').textContent=filtered.length+' / '+studentRecords.length+' hồ sơ';
 }
 function startStudentsListener(uid){
   stopStudentsListener();currentTeacherUid=uid;
-  studentsTableBody.innerHTML='<tr><td colspan="5">Đang tải danh sách...</td></tr>';
+  studentsTableBody.innerHTML='<tr><td colspan="6">Đang tải danh sách...</td></tr>';
   studentsUnsubscribe=db.collection('students').where('teacherUid','==',uid).onSnapshot(snapshot=>{
     studentRecords=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>{
       const at=a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0;
@@ -285,12 +287,15 @@ function startStudentsListener(uid){
     renderStudents();
     if(typeof renderAnalytics==='function')renderAnalytics();
   },error=>{
-    studentsTableBody.innerHTML='<tr><td colspan="5">Không tải được hồ sơ. Hãy kiểm tra Firestore Rules đã được cập nhật.</td></tr>';
+    studentsTableBody.innerHTML='<tr><td colspan="6">Không tải được hồ sơ. Hãy kiểm tra Firestore Rules đã được cập nhật.</td></tr>';
     document.getElementById('studentsCount').textContent='Lỗi đọc dữ liệu: '+error.code;
   });
 }
 function openStudentForm(student){
-  editingStudentId=student?student.id:null;
+  editingStudentId=student?student.id:null;editingStudentRecord=student||null;
+  document.getElementById("studentPasswordWrap").style.display=student?"none":"block";
+  document.getElementById("studentPassword").value="";
+  document.getElementById("studentEmail").required=!student;
   document.getElementById('studentModalTitle').textContent=student?'Chỉnh sửa hồ sơ':'Thêm học sinh';
   document.getElementById('studentName').value=student?.name||'';
   document.getElementById('studentEmail').value=student?.email||'';
@@ -315,16 +320,23 @@ studentForm.addEventListener('submit',async event=>{
   if(!currentTeacherUid){studentFormMessage.textContent='Bạn cần đăng nhập bằng tài khoản giáo viên.';return;}
   const name=document.getElementById('studentName').value.trim();
   const email=document.getElementById('studentEmail').value.trim();
+  const password=document.getElementById("studentPassword").value;
   const className=document.getElementById('studentClass').value.trim();
   const status=document.getElementById('studentStatus').value;
   const notes=document.getElementById('studentNotes').value.trim();
   if(!name){studentFormMessage.textContent='Vui lòng nhập họ tên học sinh.';return;}
+  if(!editingStudentId&&(!email||password.length<6)){studentFormMessage.textContent="Nhập email và mật khẩu tối thiểu 6 ký tự để tạo tài khoản.";return;}
   studentSaveButton.disabled=true;studentSaveButton.textContent='Đang lưu...';studentFormMessage.textContent='';
-  const payload={name,email,className,status,notes,teacherUid:currentTeacherUid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  const payload={name,email,className,status,notes,teacherUid:currentTeacherUid,authUid:editingStudentRecord?.authUid||"",pointsBalance:Number(editingStudentRecord?.pointsBalance||0),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
   try{
-    if(editingStudentId){await db.collection('students').doc(editingStudentId).update(payload);}
-    else{payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('students').add(payload);}
-    studentModal.classList.remove('open');studentForm.reset();showToast(editingStudentId?'Đã cập nhật hồ sơ.':'Đã thêm học sinh.');
+    if(editingStudentId){await db.collection("students").doc(editingStudentId).update(payload);}
+    else{
+      const credential=await provisioningAuth.createUserWithEmailAndPassword(email,password);
+      try{payload.authUid=credential.user.uid;payload.pointsBalance=0;payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection("students").doc(credential.user.uid).set(payload);}
+      catch(writeError){try{await credential.user.delete();}catch(cleanupError){}throw writeError;}
+      finally{await provisioningAuth.signOut();}
+    }
+    studentModal.classList.remove("open");studentForm.reset();showToast(editingStudentId?"Đã cập nhật hồ sơ.":"Đã tạo tài khoản và hồ sơ học sinh.");
   }catch(error){
     studentFormMessage.textContent='Không lưu được hồ sơ ('+error.code+'). Kiểm tra Firestore Rules.';
   }finally{studentSaveButton.disabled=false;studentSaveButton.textContent='Lưu hồ sơ';}
@@ -334,8 +346,8 @@ studentModal.addEventListener('keydown',event=>{if(event.key==='Escape')studentM
 modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
 
 let dataUnsubs=[];
-let vocabRecords=[], assignmentRecords=[], submissionRecords=[];
-const cloudinaryCloud='mqqzw5ot', cloudinaryPreset='pink-class-submissions';
+let vocabRecords=[], assignmentRecords=[], submissionRecords=[], rewardRecords=[], redemptionRecords=[];
+// Ảnh quà được nén ở trình duyệt và lưu trong Firestore; không cần dịch vụ lưu ảnh ngoài.
 function stopDataListeners(){dataUnsubs.forEach(fn=>fn());dataUnsubs=[];vocabRecords=[];assignmentRecords=[];submissionRecords=[];}
 function listenCollection(name,callback){
  const unsub=db.collection(name).where('teacherUid','==',currentTeacherUid).onSnapshot(snap=>{callback(snap.docs.map(d=>({id:d.id,...d.data()})));},err=>showToast('Lỗi tải '+name+': '+err.code));
@@ -369,7 +381,7 @@ function renderAnalytics(){
  document.getElementById('reportVocab').textContent=vocabRecords.length;
  document.getElementById('reportAssignments').textContent=assignmentRecords.length;
  document.getElementById('reportGraded').textContent=graded.length;
- const rows=studentRecords.map(st=>{const list=graded.filter(x=>x.studentId===st.id);return {name:st.name,count:list.length,avg:list.length?Math.round(list.reduce((a,x)=>a+x.score,0)/list.length):0,total:list.reduce((a,x)=>a+x.score,0)};});
+ const rows=studentRecords.map(st=>{const list=graded.filter(x=>x.studentId===st.id);return {name:st.name,count:list.length,avg:list.length?Math.round(list.reduce((a,x)=>a+x.score,0)/list.length):0,total:Number(st.pointsBalance??list.reduce((a,x)=>a+x.score,0))};});
  document.getElementById('scoresBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+' ⭐</td><td>'+x.count+'</td></tr>').join(''):'<tr><td colspan="3" class="empty">Chưa có học sinh.</td></tr>';
  document.getElementById('reportBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.count+'</td><td>'+(x.count?x.avg+'/100':'—')+'</td><td>'+x.total+'</td></tr>').join(''):'<tr><td colspan="4" class="empty">Chưa có dữ liệu.</td></tr>';
 }
