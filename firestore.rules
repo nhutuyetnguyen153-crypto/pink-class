@@ -232,6 +232,50 @@ service cloud.firestore {
         && (request.resource.data.score == null || (request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score <= 100));
       allow delete: if owns(resource.data);
     }
+    match /studentRequests/{requestId} {
+      allow read: if (isTeacher() && resource.data.teacherUid == request.auth.uid)
+        || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn()
+        && studentOwns(request.auth.uid)
+        && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','type','assignmentId','assignmentTitle','requestedDueDate','absenceDate','reason','status','requestedAt'])
+        && request.resource.data.keys().hasAll(['teacherUid','studentUid','studentId','studentName','type','assignmentId','assignmentTitle','requestedDueDate','absenceDate','reason','status','requestedAt'])
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentId == (exists(/databases/$(database)/documents/students/$(request.auth.uid))
+          ? request.auth.uid
+          : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId)
+        && exists(/databases/$(database)/documents/students/$(request.resource.data.studentId))
+        && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid == request.resource.data.teacherUid
+        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
+        && request.resource.data.studentName == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.name
+        && request.resource.data.type in ['extension','late_explanation','absence']
+        && request.resource.data.reason is string && request.resource.data.reason.size() > 0 && request.resource.data.reason.size() <= 1200
+        && request.resource.data.assignmentId is string
+        && request.resource.data.assignmentTitle is string
+        && request.resource.data.requestedDueDate is string
+        && request.resource.data.absenceDate is string
+        && (request.resource.data.type == 'absence'
+          || (exists(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId))
+            && get(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId)).data.teacherUid == request.resource.data.teacherUid))
+        && request.resource.data.status == 'pending'
+        && request.resource.data.requestedAt == request.time;
+      allow update: if isTeacher()
+        && resource.data.teacherUid == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.status in ['approved','rejected']
+        && request.resource.data.teacherUid == resource.data.teacherUid
+        && request.resource.data.studentUid == resource.data.studentUid
+        && request.resource.data.studentId == resource.data.studentId
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.assignmentId == resource.data.assignmentId
+        && request.resource.data.requestedDueDate == resource.data.requestedDueDate
+        && request.resource.data.reason == resource.data.reason
+        && request.resource.data.processedBy == request.auth.uid
+        && request.resource.data.processedAt == request.time
+        && request.resource.data.teacherNote is string
+        && request.resource.data.teacherNote.size() <= 1000
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','teacherNote','processedAt','processedBy']);
+      allow delete: if false;
+    }
     match /scoreEvents/{docId} {
       allow read: if owns(resource.data) || (signedIn() && (resource.data.studentId == request.auth.uid || (exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)) && get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId == resource.data.studentId)));
       allow create: if isTeacher() && owns(request.resource.data)
