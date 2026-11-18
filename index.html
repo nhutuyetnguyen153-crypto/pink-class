@@ -160,12 +160,12 @@ body:not(.authenticated) .app{display:none}
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCXk4QBVMvMbIFtVInEmE4t3_AsdrI1mE",
-  authDomain: "pink-class.firebaseapp.com",
-  projectId: "pink-class",
-  storageBucket: "pink-class.firebasestorage.app",
-  messagingSenderId: "676162283400",
-  appId: "1:676162283400:web:bf642b0a112cb2c3f1bc3d"
+  apiKey: "AIzaSyDBZ-FmtPXakXH7Iq1opw77azi4MK_uTac",
+  authDomain: "pink-class-test.firebaseapp.com",
+  projectId: "pink-class-test",
+  storageBucket: "pink-class-test.firebasestorage.app",
+  messagingSenderId: "932484423737",
+  appId: "1:932484423737:web:17b1a1f6cbd15e9804ede8"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -224,8 +224,6 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 document.getElementById('signOutBtn').addEventListener('click',()=>{stopStudentsListener();auth.signOut()});
-  await auth.signOut();
-});
 
 const titles={dashboard:"Tổng quan lớp học",students:"Danh sách học sinh",vocabulary:"Ôn tập từ vựng",grammar:"Bài tập ngữ pháp",submissions:"Bài nộp",scores:"Điểm & streak",reports:"Báo cáo học tập"};
 function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));document.getElementById('pageTitle').textContent=titles[name];document.getElementById('sidebar').classList.remove('show');}
