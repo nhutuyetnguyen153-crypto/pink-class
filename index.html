@@ -341,6 +341,7 @@ async function adjustStudentPoints(student){
  catch(e){showToast(e.message==='negative_balance'?'Không thể trừ nhiều hơn số điểm hiện có.':'Không cập nhật được điểm: '+(e.code||e.message));}
 }
 async function deleteStudent(student){
+  if(student.authUid){showToast('Học sinh đã có tài khoản. Hãy chuyển trạng thái sang Tạm nghỉ thay vì xóa.');return;}
   if(!currentTeacherUid||!confirm('Xóa hồ sơ '+student.name+'? Thao tác này không thể hoàn tác.'))return;
   try{await db.collection('students').doc(student.id).delete();showToast('Đã xóa hồ sơ học sinh.');}
   catch(error){showToast('Không thể xóa hồ sơ: '+error.code);}
