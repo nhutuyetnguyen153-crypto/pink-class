@@ -74,7 +74,7 @@ service cloud.firestore {
         && request.resource.data.status in ['active','paused']
         && request.resource.data.teacherUid == resource.data.teacherUid
         && request.resource.data.createdAt == resource.data.createdAt
-        && ((!('authUid' in resource.data) && (!('authUid' in request.resource.data) || request.resource.data.authUid == '')) || (('authUid' in resource.data) && request.resource.data.authUid == resource.data.authUid))
+        && ((!('authUid' in resource.data) && (!('authUid' in request.resource.data) || request.resource.data.authUid == '' || (existsAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)) && getAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)).data.studentId == studentId && getAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)).data.teacherUid == request.auth.uid))) || (('authUid' in resource.data) && request.resource.data.authUid == resource.data.authUid))
         && (!('pointsBalance' in request.resource.data) || (request.resource.data.pointsBalance is number && request.resource.data.pointsBalance >= 0))
         && request.resource.data.updatedAt == request.time;
       allow delete: if owns(resource.data);
