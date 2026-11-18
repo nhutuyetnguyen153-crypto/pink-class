@@ -533,7 +533,16 @@ document.getElementById('submissionBody').addEventListener('click',async e=>{
  if(e.target.dataset.del){deleteRecord('submissions',id);return;}
  const item=submissionRecords.find(x=>x.id===id);const raw=prompt('Nhập điểm từ 0 đến 100:',item.score??'');if(raw===null)return;const score=Number(raw);if(!Number.isFinite(score)||score<0||score>100){showToast('Điểm phải từ 0 đến 100.');return;}
  const feedback=prompt('Nhận xét cho học sinh (không bắt buộc):',item.feedback||'')??'';
- try{await db.collection('submissions').doc(id).update({score,feedback,status:'graded',gradedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});await db.collection('scoreEvents').add({teacherUid:currentTeacherUid,studentId:item.studentId,submissionId:id,points:score,createdAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã lưu điểm và lịch sử điểm.');}
+ try{
+  const studentRef=db.collection('students').doc(item.studentId),submissionRef=db.collection('submissions').doc(id);let delta=0;
+  await db.runTransaction(async tx=>{const pair=await Promise.all([tx.get(studentRef),tx.get(submissionRef)]);const studentSnap=pair[0],submissionSnap=pair[1];if(!studentSnap.exists||!submissionSnap.exists)throw new Error('student_or_submission_missing');
+   const previous=typeof submissionSnap.data().score==='number'?submissionSnap.data().score:0;
+   const balance=typeof studentSnap.data().pointsBalance==='number'?studentSnap.data().pointsBalance:submissionRecords.filter(x=>x.studentId===item.studentId&&typeof x.score==='number').reduce((sum,x)=>sum+x.score,0);
+   delta=score-previous;if(balance+delta<0)throw new Error('negative_balance');
+   tx.update(studentRef,{pointsBalance:balance+delta,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   tx.update(submissionRef,{score,feedback,status:'graded',gradedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  });
+  if(delta!==0)await db.collection('scoreEvents').add({teacherUid:currentTeacherUid,studentId:item.studentId,submissionId:id,points:delta,note:'Điểm bài tập',createdAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã lưu điểm và cập nhật số dư.');}
  catch(err){showToast('Không chấm được: '+err.code);}
 });
 document.getElementById('exportDemo').onclick=()=>{
