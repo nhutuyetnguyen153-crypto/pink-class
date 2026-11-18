@@ -84,6 +84,8 @@ service cloud.firestore {
       allow get: if signedIn() && request.auth.uid == accountUid && resource.data.authUid == request.auth.uid;
       allow list: if isTeacher() && resource.data.teacherUid == request.auth.uid;
       allow create: if isTeacher()
+        && request.resource.data.keys().hasOnly(['authUid','studentId','teacherUid','createdAt'])
+        && request.resource.data.keys().hasAll(['authUid','studentId','teacherUid','createdAt'])
         && request.resource.data.authUid == accountUid
         && request.resource.data.studentId is string
         && request.resource.data.teacherUid == request.auth.uid
@@ -104,7 +106,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if owns(resource.data) && owns(request.resource.data)
         && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100
-        && request.resource.data.pointsCost is int && request.resource.data.pointsCost > 0
+        && request.resource.data.pointsCost is int && request.resource.data.pointsCost > 0 && request.resource.data.pointsCost <= 10000
         && request.resource.data.imageData is string && request.resource.data.imageData.size() <= 650000
         && request.resource.data.updatedAt == request.time
         && request.resource.data.createdAt == resource.data.createdAt;
@@ -199,6 +201,8 @@ service cloud.firestore {
         && request.resource.data.submissionId is string
         && request.resource.data.points is number
         && request.resource.data.points >= -10000 && request.resource.data.points <= 10000
+        && exists(/databases/$(database)/documents/students/$(request.resource.data.studentId))
+        && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid == request.auth.uid
         && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
