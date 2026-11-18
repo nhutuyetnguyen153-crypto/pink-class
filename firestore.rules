@@ -50,10 +50,18 @@ service cloud.firestore {
         && request.resource.data.authUid == studentId
         && request.resource.data.pointsBalance == 0
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
-      allow update: if owns(resource.data) && validStudentData()
+      allow update: if owns(resource.data)
+        && request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','createdAt','updatedAt'])
+        && request.resource.data.keys().hasAll(['name','email','className','status','notes','teacherUid','updatedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string && request.resource.data.email.size() <= 160
+        && request.resource.data.className is string && request.resource.data.className.size() <= 60
+        && request.resource.data.notes is string && request.resource.data.notes.size() <= 1000
+        && request.resource.data.status in ['active','paused']
         && request.resource.data.teacherUid == resource.data.teacherUid
-        && request.resource.data.authUid == resource.data.authUid
         && request.resource.data.createdAt == resource.data.createdAt
+        && (!('authUid' in request.resource.data) || request.resource.data.authUid == resource.data.authUid)
+        && (!('pointsBalance' in request.resource.data) || (request.resource.data.pointsBalance is number && request.resource.data.pointsBalance >= 0))
         && request.resource.data.updatedAt == request.time;
       allow delete: if owns(resource.data);
     }
@@ -162,7 +170,7 @@ service cloud.firestore {
         && request.resource.data.studentId is string
         && request.resource.data.submissionId is string
         && request.resource.data.points is number
-        && request.resource.data.points >= 0 && request.resource.data.points <= 100
+        && request.resource.data.points >= -10000 && request.resource.data.points <= 10000
         && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
