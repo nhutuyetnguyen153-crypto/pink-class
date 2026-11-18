@@ -218,7 +218,8 @@ auth.onAuthStateChanged(async (user) => {
     }
     await auth.signOut(); authMessage.textContent = "Tài khoản chưa được cấp quyền giáo viên hoặc học sinh.";
   } catch (error) {
-    await auth.signOut(); authMessage.textContent = "Không thể xác minh tài khoản. Kiểm tra Firestore Rules.";
+    console.error("SNOW account verification failed:", error);
+    await auth.signOut(); authMessage.textContent = "Không thể xác minh tài khoản (" + (error.code || "unknown") + "). Kiểm tra Firestore Rules.";
   }
 });
 
