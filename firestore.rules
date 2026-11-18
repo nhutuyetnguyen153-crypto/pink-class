@@ -75,7 +75,7 @@ service cloud.firestore {
         && request.resource.data.teacherUid == resource.data.teacherUid
         && request.resource.data.createdAt == resource.data.createdAt
         && ((!('authUid' in resource.data) && (!('authUid' in request.resource.data) || request.resource.data.authUid == '' || (existsAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)) && getAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)).data.studentId == studentId && getAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)).data.teacherUid == request.auth.uid))) || (('authUid' in resource.data) && request.resource.data.authUid == resource.data.authUid))
-        && (!('pointsBalance' in request.resource.data) || (request.resource.data.pointsBalance is number && request.resource.data.pointsBalance >= 0))
+        && (!('pointsBalance' in request.resource.data) || (request.resource.data.pointsBalance is number && request.resource.data.pointsBalance >= -1000000))
         && request.resource.data.updatedAt == request.time;
       allow delete: if owns(resource.data);
     }
@@ -158,15 +158,21 @@ service cloud.firestore {
     }
 
     match /vocabularySets/{docId} {
-      allow read: if owns(resource.data);
+      allow read: if owns(resource.data) || studentOfTeacher(resource.data.teacherUid);
       allow create: if isTeacher() && owns(request.resource.data)
         && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 120
         && request.resource.data.words is string && request.resource.data.words.size() <= 12000
+        && (!('flashcardUrl' in request.resource.data) || (request.resource.data.flashcardUrl is string && request.resource.data.flashcardUrl.size() <= 2000))
+        && (!('vocabularyUrl' in request.resource.data) || (request.resource.data.vocabularyUrl is string && request.resource.data.vocabularyUrl.size() <= 2000))
+        && (!('dueDate' in request.resource.data) || (request.resource.data.dueDate is string && request.resource.data.dueDate.size() <= 40))
         && request.resource.data.className is string
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if owns(resource.data) && owns(request.resource.data)
         && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 120
         && request.resource.data.words is string && request.resource.data.words.size() <= 12000
+        && (!('flashcardUrl' in request.resource.data) || (request.resource.data.flashcardUrl is string && request.resource.data.flashcardUrl.size() <= 2000))
+        && (!('vocabularyUrl' in request.resource.data) || (request.resource.data.vocabularyUrl is string && request.resource.data.vocabularyUrl.size() <= 2000))
+        && (!('dueDate' in request.resource.data) || (request.resource.data.dueDate is string && request.resource.data.dueDate.size() <= 40))
         && request.resource.data.updatedAt == request.time
         && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if owns(resource.data);
@@ -227,7 +233,7 @@ service cloud.firestore {
       allow update: if owns(resource.data) && owns(request.resource.data)
         && request.resource.data.studentId == resource.data.studentId
         && request.resource.data.assignmentId == resource.data.assignmentId
-        && request.resource.data.imageUrl == resource.data.imageUrl
+        && (request.resource.data.imageUrl == resource.data.imageUrl || (request.resource.data.imageUrl == '' && resource.data.createdAt is timestamp && resource.data.createdAt <= request.time - duration.value(7, 'd')))
         && request.resource.data.updatedAt == request.time
         && (request.resource.data.score == null || (request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score <= 100));
       allow delete: if owns(resource.data);
