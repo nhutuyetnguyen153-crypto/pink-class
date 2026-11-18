@@ -89,14 +89,10 @@ body:not(.authenticated) .app{display:none}
     </div>
     <div class="content-grid">
       <div class="card"><div class="card-head"><div><h3>Nhiệm vụ gần đây</h3><div class="sub">Theo dõi tình hình bài tập của lớp</div></div><button class="linkbtn" data-go="grammar">Xem tất cả →</button></div>
-        <div class="task"><div class="task-icon">📖</div><div class="task-info"><b>Unit 5 — Vocabulary review</b><small>Ôn từ vựng · Hạn 20/11/2026</small></div><span class="tag">Đang thực hiện</span></div>
-        <div class="task"><div class="task-icon">✍️</div><div class="task-info"><b>Past Simple Exercises</b><small>Ngữ pháp · Hạn 19/11/2026</small></div><span class="tag wait">Chờ nộp</span></div>
-        <div class="task"><div class="task-icon">🧩</div><div class="task-info"><b>Irregular verbs practice</b><small>Ôn từ vựng · Hạn 18/11/2026</small></div><span class="tag late">Quá hạn</span></div>
+        <div class="empty">Nhiệm vụ thật sẽ hiển thị tại mục Bài tập ngữ pháp sau khi cô tạo dữ liệu.</div>
       </div>
       <div class="card"><div class="card-head"><div><h3>Học sinh nổi bật</h3><div class="sub">Điểm tích lũy minh họa</div></div><button class="linkbtn" data-go="scores">Bảng điểm →</button></div>
-        <div class="student"><div class="student-avatar">AN</div><div class="student-info"><b>An Nguyễn</b><small>🔥 7 ngày streak</small></div><span class="score">120 điểm</span></div>
-        <div class="student"><div class="student-avatar">MI</div><div class="student-info"><b>Minh Trần</b><small>🔥 5 ngày streak</small></div><span class="score">105 điểm</span></div>
-        <div class="student"><div class="student-avatar">HA</div><div class="student-info"><b>Hà Lê</b><small>🔥 4 ngày streak</small></div><span class="score">90 điểm</span></div>
+        <div class="empty">Bảng điểm thật sẽ được tổng hợp từ các bài đã chấm.</div>
         <div class="progress-wrap"><div class="progress-label"><span>Tiến độ chung tuần này</span><b>72%</b></div><div class="progress"><span></span></div></div>
       </div>
     </div>
@@ -282,6 +278,7 @@ function startStudentsListener(uid){
       const bt=b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0;return bt-at;
     });
     renderStudents();
+    if(typeof renderAnalytics==='function')renderAnalytics();
   },error=>{
     studentsTableBody.innerHTML='<tr><td colspan="5">Không tải được hồ sơ. Hãy kiểm tra Firestore Rules đã được cập nhật.</td></tr>';
     document.getElementById('studentsCount').textContent='Lỗi đọc dữ liệu: '+error.code;
