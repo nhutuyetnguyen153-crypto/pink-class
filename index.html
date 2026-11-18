@@ -141,7 +141,7 @@ body:not(.authenticated) .app{display:none}
 </main>
 </div>
 <div class="modal-backdrop" id="studentModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle"><h3 id="studentModalTitle">Thêm học sinh</h3><form id="studentForm"><div class="student-form-grid"><div class="full"><label for="studentName">Họ và tên *</label><input id="studentName" maxlength="100" required placeholder="Ví dụ: Nguyễn Minh Anh"></div><div><label for="studentEmail">Email đăng nhập *</label><input id="studentEmail" type="email" maxlength="160" placeholder="student@example.com"></div><div class="full" id="studentPasswordWrap"><label for="studentPassword">Mật khẩu ban đầu *</label><input id="studentPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Ít nhất 6 ký tự"></div><div><label for="studentClass">Lớp</label><input id="studentClass" maxlength="60" placeholder="Ví dụ: Pink 01"></div><div class="full"><label for="studentStatus">Trạng thái</label><select id="studentStatus"><option value="active">Đang học</option><option value="paused">Tạm nghỉ</option></select></div><div class="full"><label for="studentNotes">Ghi chú</label><textarea id="studentNotes" maxlength="1000" placeholder="Ghi chú dành cho giáo viên"></textarea></div></div><div class="modal-actions"><button class="secondary" id="cancelStudent" type="button">Hủy</button><button class="primary" id="saveStudent" type="submit">Lưu hồ sơ</button></div><div class="auth-message" id="studentFormMessage" role="status"></div></form></div></div>
-<div class="student-portal" id="studentPortal"><div class="student-portal-inner"><div class="student-portal-head"><div class="brand"><div class="logo">S</div><div><b>SNOW</b><small>KHU VỰC HỌC SINH</small></div></div><button class="signout-btn" id="studentSignOut" type="button">Đăng xuất</button></div><div class="student-hero"><h1 id="studentWelcome">Xin chào!</h1><p>Điểm thưởng hiện tại</p><div class="student-balance"><span id="studentPoints">0</span> ⭐</div></div><div class="student-portal-section"><h2>🎁 Quà có thể đổi</h2><div class="reward-grid" id="studentRewardGrid"><div class="empty">Đang tải quà...</div></div></div><div class="student-portal-section"><h2>📋 Yêu cầu đổi quà của em</h2><div id="studentRequests">Chưa có yêu cầu.</div></div><div class="student-portal-section"><h2>⭐ Lịch sử điểm</h2><div id="studentPointHistory">Đang tải lịch sử điểm...</div></div></div></div>
+<div class="student-portal" id="studentPortal"><div class="student-portal-inner"><div class="student-portal-head"><div class="brand"><div class="logo">S</div><div><b>SNOW</b><small>KHU VỰC HỌC SINH</small></div></div><button class="signout-btn" id="studentSignOut" type="button">Đăng xuất</button></div><div class="student-hero"><h1 id="studentWelcome">Xin chào!</h1><p>Điểm thưởng hiện tại</p><div class="student-balance"><span id="studentPoints">0</span> ⭐</div></div><div class="student-portal-section"><h2>📚 Bài tập được giao</h2><div class="sub">Chọn bài tập và gửi ảnh bài làm</div><div id="studentAssignments"><div class="empty">Đang tải bài tập...</div></div></div><div class="student-portal-section"><h2>🎁 Quà có thể đổi</h2><div class="reward-grid" id="studentRewardGrid"><div class="empty">Đang tải quà...</div></div></div><div class="student-portal-section"><h2>📋 Yêu cầu đổi quà của em</h2><div id="studentRequests">Chưa có yêu cầu.</div></div><div class="student-portal-section"><h2>⭐ Lịch sử điểm</h2><div id="studentPointHistory">Đang tải lịch sử điểm...</div></div></div></div>
 <div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">Tạo mới</h3><div class="field"><label id="fieldLabel">Tên</label><input id="modalInput" placeholder="Nhập thông tin"></div><div class="modal-actions"><button class="secondary" id="cancelModal">Hủy</button><button class="primary" id="saveModal">Lưu bản nháp</button></div></div></div>
 <div class="toast" id="toast">Đã cập nhật.</div>
 
@@ -456,9 +456,34 @@ function startStudentPortal(uid,profile,studentDocId=uid){
  document.getElementById("studentWelcome").textContent="Xin chào, "+(profile.name||"bạn")+"!";
  renderStudentPoints(profile);
  studentPortalUnsubs.push(db.collection("students").doc(studentDocId).onSnapshot(s=>{if(s.exists){activeStudentProfile=s.data();renderStudentPoints(activeStudentProfile);}},e=>showToast("Không tải được điểm: "+e.code)));
- studentPortalUnsubs.push(db.collection("rewards").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentRewards(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được quà: "+e.code)));
+ studentPortalUnsubs.push(db.collection("assignments").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentAssignments(s.docs.map(d=>({id:d.id,...d.data()})),profile),e=>showToast("Không tải được bài tập: "+e.code)));\n studentPortalUnsubs.push(db.collection("rewards").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentRewards(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("redemptions").where("studentUid","==",uid).onSnapshot(s=>renderStudentRequests(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được lịch sử đổi quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("scoreEvents").where("studentId","==",studentDocId).onSnapshot(s=>renderStudentPointHistory(s.docs.map(d=>d.data())),e=>{document.getElementById("studentPointHistory").textContent="Chưa có lịch sử điểm."; }));
+}
+function renderStudentAssignments(list,profile){
+ const host=document.getElementById("studentAssignments");host.textContent="";
+ const visible=list.filter(x=>!x.className||!profile.className||x.className===profile.className||x.className==="Tất cả");
+ if(!visible.length){host.textContent="Hiện chưa có bài tập dành cho lớp của em.";return;}
+ visible.sort((a,b)=>(a.dueDate||"9999").localeCompare(b.dueDate||"9999")).forEach(item=>{
+  const row=document.createElement("div");row.className="request-row";
+  const title=document.createElement("b");title.textContent=item.title||"Bài tập";
+  const desc=document.createElement("div");desc.textContent=item.description||"Không có mô tả";
+  const due=document.createElement("small");due.textContent="Hạn nộp: "+(item.dueDate||"Chưa đặt hạn");
+  const btn=document.createElement("button");btn.className="secondary";btn.type="button";btn.textContent="Gửi ảnh bài làm";
+  btn.addEventListener("click",()=>{
+   const picker=document.createElement("input");picker.type="file";picker.accept="image/jpeg,image/png,image/webp";
+   picker.onchange=async()=>{const file=picker.files&&picker.files[0];if(!file)return;
+    try{
+     btn.disabled=true;btn.textContent="Đang xử lý ảnh...";
+     const imageUrl=await compressRewardImage(file);
+     await db.collection("submissions").add({teacherUid:profile.teacherUid,studentId:activeStudentDocId,studentName:profile.name||"Học sinh",studentUid:activeStudentUid,assignmentId:item.id,assignmentTitle:item.title||"Bài tập",imageUrl,note:"",status:"submitted",score:null,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+     showToast("Đã nộp bài thành công.");
+    }catch(e){showToast("Không nộp được bài: "+(e.code||e.message));}
+    finally{btn.disabled=false;btn.textContent="Gửi ảnh bài làm";}
+   };picker.click();
+  });
+  row.append(title,desc,due,document.createElement("br"),btn);host.appendChild(row);
+ });
 }
 function renderStudentPoints(profile){document.getElementById("studentPoints").textContent=String(Number(profile.pointsBalance||0));}
 function renderStudentRewards(list){
