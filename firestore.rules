@@ -117,8 +117,8 @@ service cloud.firestore {
                  && existsAfter(/databases/$(database)/documents/vocabDaily/$(request.resource.data.vocabDailyClaimId))
                  && getAfter(/databases/$(database)/documents/vocabDaily/$(request.resource.data.vocabDailyClaimId)).data.studentId == studentId
                  && getAfter(/databases/$(database)/documents/vocabDaily/$(request.resource.data.vocabDailyClaimId)).data.points == 10
-                 && existsAfter(/databases/$(database)/documents/scoreEvents/$( 'vocab-day-' + request.resource.data.vocabDailyClaimId))
-                 && getAfter(/databases/$(database)/documents/scoreEvents/$( 'vocab-day-' + request.resource.data.vocabDailyClaimId)).data.points == 10)
+                 && existsAfter(/databases/$(database)/documents/scoreEvents/$(vocab-day-' + request.resource.data.vocabDailyClaimId))
+                 && getAfter(/databases/$(database)/documents/scoreEvents/$(vocab-day-' + request.resource.data.vocabDailyClaimId)).data.points == 10)
                ||
                (request.resource.data.pointsBalance > resource.data.pointsBalance
                  && request.resource.data.pointsBalance - resource.data.pointsBalance <= 150
@@ -126,8 +126,8 @@ service cloud.firestore {
                  && existsAfter(/databases/$(database)/documents/learningGoals/$(request.resource.data.goalBonusId))
                  && getAfter(/databases/$(database)/documents/learningGoals/$(request.resource.data.goalBonusId)).data.status == 'completed'
                  && getAfter(/databases/$(database)/documents/learningGoals/$(request.resource.data.goalBonusId)).data.bonusPoints == request.resource.data.pointsBalance - resource.data.pointsBalance
-                 && existsAfter(/databases/$(database)/documents/scoreEvents/$( 'goal-bonus-' + request.resource.data.goalBonusId))
-                 && getAfter(/databases/$(database)/documents/scoreEvents/$( 'goal-bonus-' + request.resource.data.goalBonusId)).data.points == request.resource.data.pointsBalance - resource.data.pointsBalance)
+                 && existsAfter(/databases/$(database)/documents/scoreEvents/$(goal-bonus-' + request.resource.data.goalBonusId))
+                 && getAfter(/databases/$(database)/documents/scoreEvents/$(goal-bonus-' + request.resource.data.goalBonusId)).data.points == request.resource.data.pointsBalance - resource.data.pointsBalance)
             )
           )
         );
@@ -362,8 +362,8 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time
         && (request.resource.data.status == 'expired'
           || (request.resource.data.bonusPoints is int && request.resource.data.bonusPoints > 0 && request.resource.data.bonusPoints <= 150
-            && existsAfter(/databases/$(database)/documents/scoreEvents/$( 'goal-bonus-' + goalId))
-            && getAfter(/databases/$(database)/documents/scoreEvents/$( 'goal-bonus-' + goalId)).data.points == request.resource.data.bonusPoints));
+            && existsAfter(/databases/$(database)/documents/scoreEvents/$(goal-bonus-' + goalId))
+            && getAfter(/databases/$(database)/documents/scoreEvents/$(goal-bonus-' + goalId)).data.points == request.resource.data.bonusPoints));
       allow delete: if false;
     }
     match /pointExchangeRequests/{requestId} {
