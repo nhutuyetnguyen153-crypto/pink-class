@@ -296,13 +296,13 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid == request.resource.data.teacherUid
         && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
         && request.resource.data.studentName == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.name
-        && request.resource.data.type in ['extension','late_explanation','absence']
+        && request.resource.data.type in ['extension','late_explanation','absence','streak_recovery']
         && request.resource.data.reason is string && request.resource.data.reason.size() > 0 && request.resource.data.reason.size() <= 1200
         && request.resource.data.assignmentId is string
         && request.resource.data.assignmentTitle is string
         && request.resource.data.requestedDueDate is string
         && request.resource.data.absenceDate is string
-        && (request.resource.data.type == 'absence'
+        && (request.resource.data.type in ['absence','streak_recovery']
           || (exists(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId))
             && get(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId)).data.teacherUid == request.resource.data.teacherUid))
         && request.resource.data.status == 'pending'
@@ -389,33 +389,20 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     match /badgeClaims/{claimId} {
+      function studentDocumentId() {
+        return exists(/databases/$(database)/documents/students/$(request.auth.uid))
+          ? request.auth.uid
+          : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId;
+      }
       allow get: if (isTeacher() && resource.data.teacherUid == request.auth.uid)
         || (signedIn() && studentOwns(request.auth.uid)
-          && claimId.matches('^' + (exists(/databases/$(database)/documents/students/$(request.auth.uid))
-            ? request.auth.uid
-            : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId) + '_.*
-        && request.resource.data.keys().hasOnly(['studentId','studentUid','teacherUid','badgeId','points','claimedAt'])
-        && request.resource.data.studentUid == request.auth.uid
-        && request.resource.data.studentId == (exists(/databases/$(database)/documents/students/$(request.auth.uid)) ? request.auth.uid : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId)
-        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
-        && request.resource.data.badgeId is string
-        && request.resource.data.points == badgeReward(request.resource.data.badgeId)
-        && request.resource.data.points > 0
-        && request.resource.data.claimedAt == request.time
-        && claimId == request.resource.data.studentId + '_' + request.resource.data.badgeId
-        && !exists(/databases/$(database)/documents/badgeClaims/$(claimId))
-        && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance + request.resource.data.points;
-      allow update, delete: if false;
-    }
-    match /{document=**} { allow read, write: if false; }
-  }
-}));
+          && claimId.matches('^' + studentDocumentId() + '_.*$'));
       allow list: if (isTeacher() && resource.data.teacherUid == request.auth.uid)
         || (signedIn() && resource.data.studentUid == request.auth.uid);
       allow create: if signedIn() && studentOwns(request.auth.uid)
         && request.resource.data.keys().hasOnly(['studentId','studentUid','teacherUid','badgeId','points','claimedAt'])
         && request.resource.data.studentUid == request.auth.uid
-        && request.resource.data.studentId == (exists(/databases/$(database)/documents/students/$(request.auth.uid)) ? request.auth.uid : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId)
+        && request.resource.data.studentId == studentDocumentId()
         && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
         && request.resource.data.badgeId is string
         && request.resource.data.points == badgeReward(request.resource.data.badgeId)
@@ -423,7 +410,8 @@ service cloud.firestore {
         && request.resource.data.claimedAt == request.time
         && claimId == request.resource.data.studentId + '_' + request.resource.data.badgeId
         && !exists(/databases/$(database)/documents/badgeClaims/$(claimId))
-        && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance + request.resource.data.points;
+        && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance
+          == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance + request.resource.data.points;
       allow update, delete: if false;
     }
     match /{document=**} { allow read, write: if false; }
