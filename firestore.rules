@@ -135,7 +135,9 @@ service cloud.firestore {
                  && existsAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId))
                  && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.studentId == studentId
                  && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.studentUid == request.auth.uid
+                 && get(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.reflectionRewardClaimed == false
                  && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.reflectionRewardClaimed == true
+                 && request.resource.data.reflectionRewardSubmissionId != resource.data.get('reflectionRewardSubmissionId', '')
                  && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.reflectionText is string
                  && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.reflectionText.size() >= 10
                  && existsAfter(/databases/$(database)/documents/scoreEvents/$('reflection-' + request.resource.data.reflectionRewardSubmissionId))
