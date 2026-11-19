@@ -518,7 +518,7 @@ function startStudentPortal(uid,profile,studentDocId=uid){
  studentPortalUnsubs.push(db.collection("vocabularySets").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>{studentVocabRecords=s.docs.map(d=>({id:d.id,...d.data()}));renderStudentVocabulary(studentVocabRecords,activeStudentProfile||profile);},e=>showToast("Không tải được từ vựng: "+e.code)));
  studentPortalUnsubs.push(db.collection("badgeClaims").where("studentId","==",studentDocId).where("studentUid","==",uid).onSnapshot(s=>{studentBadgeClaims=s.docs.map(d=>d.data().badgeId);renderStudentProgress();},e=>showToast("Không tải được trạng thái huy hiệu: "+e.code)));
  studentPortalUnsubs.push(db.collection("submissions").where("studentUid","==",uid).onSnapshot(s=>{studentSubmissionRecords=s.docs.map(d=>({id:d.id,...d.data()}));renderStudentAssignments(lastStudentAssignmentList,activeStudentProfile||profile);renderStudentProgress();},e=>showToast("Không tải được tiến độ bài nộp: "+e.code)));
- studentPortalUnsubs.push(db.collection("scoreEvents").where("studentId","==",studentDocId).onSnapshot(s=>{studentScoreEvents=s.docs.map(d=>d.data());renderStudentPointHistory(studentScoreEvents);renderStudentProgress();},e=>showToast("Không tải được lịch sử điểm: "+e.code)));
+ studentPortalUnsubs.push(db.collection("scoreEvents").where("studentId","==",studentDocId).onSnapshot(s=>{studentScoreEvents=s.docs.map(d=>d.data());renderStudentPointHistory(studentScoreEvents);renderStudentProgress();evaluateStudentGoals();},e=>showToast("Không tải được lịch sử điểm: "+e.code)));
  studentPortalUnsubs.push(db.collection("rewards").where("teacherUid","==",profile.teacherUid).onSnapshot(s=>renderStudentRewards(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("redemptions").where("studentUid","==",uid).onSnapshot(s=>renderStudentRequests(s.docs.map(d=>({id:d.id,...d.data()}))),e=>showToast("Không tải được lịch sử đổi quà: "+e.code)));
  studentPortalUnsubs.push(db.collection("scoreEvents").where("studentId","==",studentDocId).onSnapshot(s=>renderStudentPointHistory(s.docs.map(d=>d.data())),e=>{document.getElementById("studentPointHistory").textContent="Chưa có lịch sử điểm."; }));
@@ -574,7 +574,7 @@ async function sendStudentRequest(type,assignment){
  catch(e){showToast("Không gửi được yêu cầu: "+(e.code||e.message));}
 }
 function renderStudentPermissionHistory(list){const host=document.getElementById("studentPermissionHistory");host.textContent="";list.sort((a,b)=>(b.requestedAt?.toMillis?.()||0)-(a.requestedAt?.toMillis?.()||0)).forEach(x=>{const d=document.createElement("div");d.className="request-row";d.textContent=({extension:"Xin gia hạn",late_explanation:"Giải trình nộp trễ",absence:"Xin nghỉ học",streak_recovery:"Khôi phục chuỗi"}[x.type]||"Yêu cầu")+" · "+(x.status==="pending"?"Đang chờ":x.status==="approved"?"Đã duyệt":"Đã từ chối")+(x.teacherNote?" · "+x.teacherNote:"");host.appendChild(d);});if(!list.length)host.textContent="Chưa có yêu cầu nào.";}
-function renderStudentPoints(profile){document.getElementById("studentPoints").textContent=String(Number(profile.pointsBalance||0));}
+function renderStudentPoints(profile){document.getElementById("studentPoints").textContent=String(Number(profile.pointsBalance||0));renderGoldJar(profile);}
 function studentActivityDays(){return [...new Set([...studentSubmissionRecords.map(x=>x.createdAt?.toDate?localDayKey(x.createdAt.toDate()):null),...studentScoreEvents.filter(x=>Number(x.points)>0).map(x=>x.createdAt?.toDate?localDayKey(x.createdAt.toDate()):null)].filter(Boolean))].sort();}
 let studentSubmissionRecords=[],studentScoreEvents=[],studentVocabRecords=[],studentBadgeClaims=[];
 function streakFromDays(days){if(!days.length)return 0;const set=new Set(days),today=new Date();today.setHours(0,0,0,0);let cursor=new Date(today);if(!set.has(localDayKey(cursor)))cursor.setDate(cursor.getDate()-1);let n=0;while(set.has(localDayKey(cursor))){n++;cursor.setDate(cursor.getDate()-1);}return n;}
@@ -739,6 +739,8 @@ function startDataListeners(){
  listenCollection('wheelRequests',x=>{wheelRequestRecords=x;renderTeacherWheelRequests();});
  listenCollection('wheelSpins',x=>{teacherWheelSpinRecords=x;renderTeacherWheelHistory();});
  listenCollection('learningProgress',x=>{teacherProgressEvents=x;renderTeacherProgress();});
+  listenCollection('learningGoals',x=>{teacherGoalRecords=x;renderTeacherGoals();});
+  listenCollection('pointExchangeRequests',x=>{pointExchangeRecords=x;renderPointExchangeRequests();});
 }
 async function createOrEditRecord(collection,old){
  const vocab=collection==='vocabularySets';
