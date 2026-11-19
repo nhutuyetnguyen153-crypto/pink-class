@@ -747,7 +747,8 @@ document.getElementById('submissionBody').addEventListener('click',async e=>{
  catch(err){showToast('Không chấm được: '+err.code);}
 });
 async function saveTeacherStreak(id,input){const value=Number(input?.value);if(!Number.isInteger(value)||value<0||value>9999){showToast('Streak phải là số nguyên từ 0 đến 9999.');return;}try{await db.collection('students').doc(id).update({streak:value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Đã lưu streak thủ công.');}catch(err){showToast('Không lưu được streak: '+(err.code||err.message));}}
-document.getElementById('scoresBody').addEventListener('click',e=>{const id=e.target.dataset.saveStreak;if(id)saveTeacherStreak(id,e.target.parentElement.querySelector('[data-streak-input]'));});\ndocument.getElementById('teacherProgress').addEventListener('click',e=>{const id=e.target.dataset.saveStreak;if(id)saveTeacherStreak(id,e.target.parentElement.querySelector('[data-streak-input]'));});
+document.getElementById('scoresBody').addEventListener('click',e=>{const id=e.target.dataset.saveStreak;if(id)saveTeacherStreak(id,e.target.parentElement.querySelector('[data-streak-input]'));});
+document.getElementById('teacherProgress').addEventListener('click',e=>{const id=e.target.dataset.saveStreak;if(id)saveTeacherStreak(id,e.target.parentElement.querySelector('[data-streak-input]'));});
 document.getElementById('exportDemo').onclick=()=>{
  const rows=[['Học sinh','Số bài đã chấm','Điểm trung bình','Tổng điểm'],...studentRecords.map(st=>{const a=submissionRecords.filter(x=>x.studentId===st.id&&typeof x.score==='number');return [st.name,a.length,a.length?Math.round(a.reduce((n,x)=>n+x.score,0)/a.length):'',a.reduce((n,x)=>n+x.score,0)];})];
  const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
