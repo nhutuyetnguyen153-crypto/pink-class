@@ -777,7 +777,7 @@ async function pickDateTime(title,initial,optional=false){
    sel.value=String(selected);wrap.append(cap,sel);fields.appendChild(wrap);return sel;
   };
   const year=base.getFullYear(),month=base.getMonth()+1;
-  const years=Array.from({length:12},(_,i)=>now.getFullYear()-1+i);
+  const years=Array.from(new Set([...Array.from({length:16},(_,i)=>now.getFullYear()-5+i),year])).sort((a,b)=>a-b);
   const y=makeSelect("Năm",years,Math.max(years[0],Math.min(years[years.length-1],year)));
   const m=makeSelect("Tháng",Array.from({length:12},(_,i)=>i+1),month);
   const d=makeSelect("Ngày",Array.from({length:31},(_,i)=>i+1),base.getDate());
