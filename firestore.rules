@@ -68,7 +68,7 @@ service cloud.firestore {
         && request.resource.data.pointsBalance == 0
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if (owns(resource.data) || (signedIn() && (request.auth.uid == studentId || resource.data.authUid == request.auth.uid)))
-        && request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streak','streakFreezes','extraSpins','badgeClaimId','streakFreezePurchaseMonth','streakFreezeMonthlyCount','goalBonusId','vocabDailyClaimId','createdAt','updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streak','streakFreezes','extraSpins','badgeClaimId','streakFreezePurchaseMonth','streakFreezeMonthlyCount','goalBonusId','vocabDailyClaimId','createdAt','updatedAt'])
         && request.resource.data.keys().hasAll(['name','email','className','status','notes','teacherUid','updatedAt'])
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
         && request.resource.data.email is string && request.resource.data.email.size() <= 160
