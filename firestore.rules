@@ -352,6 +352,22 @@ service cloud.firestore {
             && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.extraSpins == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.extraSpins - 1));
       allow update, delete: if false;
     }
+    match /badgeClaims/{claimId} {
+      allow read: if (isTeacher() && resource.data.teacherUid == request.auth.uid) || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn() && studentOwns(request.auth.uid)
+        && request.resource.data.keys().hasOnly(['studentId','studentUid','teacherUid','badgeId','points','claimedAt'])
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentId == (exists(/databases/$(database)/documents/students/$(request.auth.uid)) ? request.auth.uid : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId)
+        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
+        && request.resource.data.badgeId is string
+        && request.resource.data.points == badgeReward(request.resource.data.badgeId)
+        && request.resource.data.points > 0
+        && request.resource.data.claimedAt == request.time
+        && claimId == request.resource.data.studentId + '_' + request.resource.data.badgeId
+        && !exists(/databases/$(database)/documents/badgeClaims/$(claimId))
+        && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance + request.resource.data.points;
+      allow update, delete: if false;
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }
