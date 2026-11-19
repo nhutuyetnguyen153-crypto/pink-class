@@ -387,66 +387,7 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /vocabDaily/{dailyId} {
-      allow get: if (signedIn()
-          && (dailyId.matches('^' + request.auth.uid + '_.*
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','setId','setTitle','dayOffset','dayKey','imageUrl','completed','points','submittedAt','createdAt'])
-        && request.resource.data.studentUid == request.auth.uid
-        && request.resource.data.studentId is string
-        && exists(/databases/$(database)/documents/students/$(request.resource.data.studentId))
-        && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.authUid == request.auth.uid
-        && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.status == 'active'
-        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
-        && exists(/databases/$(database)/documents/vocabularySets/$(request.resource.data.setId))
-        && get(/databases/$(database)/documents/vocabularySets/$(request.resource.data.setId)).data.teacherUid == request.resource.data.teacherUid
-        && request.resource.data.dayOffset in [1,3,5,7,14,21,30]
-        && request.resource.data.dayKey is string
-        && request.resource.data.imageUrl is string && request.resource.data.imageUrl.size() <= 650000
-        && request.resource.data.completed == true && request.resource.data.points == 10
-        && request.resource.data.submittedAt == request.time && request.resource.data.createdAt == request.time;
-      allow update: if owns(resource.data) && owns(request.resource.data)
-        && request.resource.data.studentId == resource.data.studentId
-        && request.resource.data.setId == resource.data.setId
-        && request.resource.data.dayKey == resource.data.dayKey
-        && request.resource.data.completed == resource.data.completed
-        && request.resource.data.points == resource.data.points
-        && request.resource.data.imageUrl == ''
-        && request.resource.data.imageDeletedAt == request.time
-        && request.resource.data.updatedAt == request.time
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['imageUrl','imageDeletedAt','updatedAt']);
-      allow delete: if false;
-    })
-            || (exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid))
-              && dailyId.matches('^' + get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId + '_.*
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','setId','setTitle','dayOffset','dayKey','imageUrl','completed','points','submittedAt','createdAt'])
-        && request.resource.data.studentUid == request.auth.uid
-        && request.resource.data.studentId is string
-        && exists(/databases/$(database)/documents/students/$(request.resource.data.studentId))
-        && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.authUid == request.auth.uid
-        && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.status == 'active'
-        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
-        && exists(/databases/$(database)/documents/vocabularySets/$(request.resource.data.setId))
-        && get(/databases/$(database)/documents/vocabularySets/$(request.resource.data.setId)).data.teacherUid == request.resource.data.teacherUid
-        && request.resource.data.dayOffset in [1,3,5,7,14,21,30]
-        && request.resource.data.dayKey is string
-        && request.resource.data.imageUrl is string && request.resource.data.imageUrl.size() <= 650000
-        && request.resource.data.completed == true && request.resource.data.points == 10
-        && request.resource.data.submittedAt == request.time && request.resource.data.createdAt == request.time;
-      allow update: if owns(resource.data) && owns(request.resource.data)
-        && request.resource.data.studentId == resource.data.studentId
-        && request.resource.data.setId == resource.data.setId
-        && request.resource.data.dayKey == resource.data.dayKey
-        && request.resource.data.completed == resource.data.completed
-        && request.resource.data.points == resource.data.points
-        && request.resource.data.imageUrl == ''
-        && request.resource.data.imageDeletedAt == request.time
-        && request.resource.data.updatedAt == request.time
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['imageUrl','imageDeletedAt','updatedAt']);
-      allow delete: if false;
-    }))))
-        || owns(resource.data)
-        || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow get: if signedIn() && dailyId.matches('^' + request.auth.uid + '_.+') || owns(resource.data) || (signedIn() && resource.data.studentUid == request.auth.uid);
       allow list: if owns(resource.data) || (signedIn() && resource.data.studentUid == request.auth.uid);
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','setId','setTitle','dayOffset','dayKey','imageUrl','completed','points','submittedAt','createdAt'])
