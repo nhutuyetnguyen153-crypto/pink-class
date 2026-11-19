@@ -757,14 +757,62 @@ function startDataListeners(){
   listenCollection('learningGoals',x=>{teacherGoalRecords=x;renderTeacherGoals();});
   listenCollection('pointExchangeRequests',x=>{pointExchangeRecords=x;renderPointExchangeRequests();renderTeacherNoticeDots();});
 }
+async function pickDateTime(title,initial,optional=false){
+ return new Promise(resolve=>{
+  const raw=String(initial||"").trim(),now=new Date();
+  let base=raw?new Date(raw.length===10?raw+"T12:00":raw):new Date(now);
+  if(Number.isNaN(base.getTime()))base=new Date(now);
+  const overlay=document.createElement("div");
+  overlay.style.cssText="position:fixed;inset:0;z-index:10020;background:#17203388;display:flex;align-items:center;justify-content:center;padding:16px";
+  const panel=document.createElement("div");
+  panel.style.cssText="background:white;color:#243247;border-radius:18px;padding:20px;width:min(440px,100%);box-shadow:0 16px 50px #0003";
+  const heading=document.createElement("h3");heading.textContent=title;heading.style.margin="0 0 16px";
+  const hint=document.createElement("div");hint.textContent="Chọn lần lượt ngày, tháng, năm, giờ và phút.";hint.style.cssText="font-size:13px;color:#64748b;margin-bottom:12px";
+  const fields=document.createElement("div");fields.style.cssText="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px";
+  const makeSelect=(label,values,selected)=>{
+   const wrap=document.createElement("label");wrap.style.cssText="display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700";
+   const cap=document.createElement("span");cap.textContent=label;
+   const sel=document.createElement("select");sel.style.cssText="width:100%;padding:11px 7px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;font-size:16px;color:#243247";
+   values.forEach(v=>{const o=document.createElement("option");o.value=String(v);o.textContent=String(v).padStart(label==="Năm"?4:2,"0");sel.appendChild(o);});
+   sel.value=String(selected);wrap.append(cap,sel);fields.appendChild(wrap);return sel;
+  };
+  const year=base.getFullYear(),month=base.getMonth()+1;
+  const years=Array.from({length:12},(_,i)=>now.getFullYear()-1+i);
+  const y=makeSelect("Năm",years,Math.max(years[0],Math.min(years[years.length-1],year)));
+  const m=makeSelect("Tháng",Array.from({length:12},(_,i)=>i+1),month);
+  const d=makeSelect("Ngày",Array.from({length:31},(_,i)=>i+1),base.getDate());
+  const h=makeSelect("Giờ",Array.from({length:24},(_,i)=>i),base.getHours());
+  const min=makeSelect("Phút",Array.from({length:60},(_,i)=>i),base.getMinutes());
+  const updateDays=()=>{const max=new Date(Number(y.value),Number(m.value),0).getDate(),oldDay=Number(d.value);d.replaceChildren();for(let i=1;i<=max;i++){const o=document.createElement("option");o.value=String(i);o.textContent=String(i).padStart(2,"0");d.appendChild(o);}d.value=String(Math.min(oldDay,max));};
+  y.addEventListener("change",updateDays);m.addEventListener("change",updateDays);
+  const actions=document.createElement("div");actions.style.cssText="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px";
+  const btn=(label,color,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.style.cssText="border:0;border-radius:10px;padding:11px 15px;background:"+color+";color:white;font-weight:700";b.onclick=fn;actions.appendChild(b);};
+  const finish=value=>{overlay.remove();resolve(value);};
+  btn("Hủy","#64748b",()=>finish(null));
+  if(optional)btn("Không đặt hạn","#94a3b8",()=>finish(""));
+  btn("Xác nhận","#db6b9b",()=>finish(y.value+"-"+String(m.value).padStart(2,"0")+"-"+String(d.value).padStart(2,"0")+"T"+String(h.value).padStart(2,"0")+":"+String(min.value).padStart(2,"0")));
+  panel.append(heading,hint,fields,actions);overlay.appendChild(panel);document.body.appendChild(overlay);
+ });
+}
 async function createOrEditRecord(collection,old){
  const vocab=collection==='vocabularySets';
  const title=prompt(vocab?'Tên bộ từ vựng:':'Tên bài tập:',old?.title||'');if(title===null)return;
  const second=prompt(vocab?'Nhập mỗi từ/cụm từ trên một dòng:':'Mô tả yêu cầu bài tập:',vocab?(old?.words||''):(old?.description||''));if(second===null)return;
  const className=prompt('Tên lớp (để trống nếu áp dụng tất cả):',old?.className||'')??'';
  const data={title:title.trim(),className:className.trim(),teacherUid:currentTeacherUid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-if(vocab){data.words=second;const flashcardUrl=prompt('Link flashcard (có thể để trống):',old?.flashcardUrl||'');if(flashcardUrl===null)return;data.flashcardUrl=flashcardUrl.trim();const vocabularyUrl=prompt('Link tài liệu từ vựng (có thể để trống):',old?.vocabularyUrl||'');if(vocabularyUrl===null)return;data.vocabularyUrl=vocabularyUrl.trim();const dueDate=prompt('Ngày giờ hết hạn bộ từ (YYYY-MM-DDTHH:mm, giờ địa phương; để trống nếu không giới hạn):',old?.dueDate||'');if(dueDate===null)return;const due=dueDate.trim();if(due&&!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(due)){showToast('Ngày giờ hết hạn không hợp lệ. Dùng YYYY-MM-DDTHH:mm.');return;}if(due&&Number.isNaN(Date.parse(due))){showToast('Ngày giờ hết hạn không hợp lệ.');return;}data.dueDate=due;const defaultStart=old?.startDate||(old?.createdAt?.toDate?localDayKey(old.createdAt.toDate()):localDayKey(new Date()));const startDate=prompt('Ngày bắt đầu lịch ôn (YYYY-MM-DD):',defaultStart);if(startDate===null)return;const start=startDate.trim();if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(start)||Number.isNaN(Date.parse(start+'T00:00:00'))){showToast('Ngày bắt đầu không hợp lệ. Hãy nhập YYYY-MM-DD.');return;}data.startDate=start;data.reviewOffsets=old?.reviewOffsets||[1,3,5,7,14,21,30];}
- else{data.description=second;data.assignmentLink=prompt("Link bài tập (URL đầy đủ, có thể để trống):",old?.assignmentLink||"")??"";data.dueDate=prompt('Hạn nộp (YYYY-MM-DDTHH:mm, giờ địa phương; ví dụ 2026-11-21T23:59):',old?.dueDate||'')??'';}
+if(vocab){
+  data.words=second;
+  const flashcardUrl=prompt('Link flashcard (có thể để trống):',old?.flashcardUrl||'');if(flashcardUrl===null)return;data.flashcardUrl=flashcardUrl.trim();
+  const vocabularyUrl=prompt('Link tài liệu từ vựng (có thể để trống):',old?.vocabularyUrl||'');if(vocabularyUrl===null)return;data.vocabularyUrl=vocabularyUrl.trim();
+  const due=await pickDateTime('Chọn ngày giờ hết hạn bộ từ',old?.dueDate||'',true);if(due===null)return;data.dueDate=due;
+  const defaultStart=(old?.startDate|| (old?.createdAt?.toDate?localDayKey(old.createdAt.toDate()):localDayKey(new Date())))+'T'+(old?.startTime||'08:00');
+  const start=await pickDateTime('Chọn ngày giờ bắt đầu lịch ôn',defaultStart,false);if(start===null)return;
+  data.startDate=start.slice(0,10);data.startTime=start.slice(11,16);data.reviewOffsets=old?.reviewOffsets||[1,3,5,7,14,21,30];
+ }else{
+  data.description=second;
+  data.assignmentLink=prompt("Link bài tập (URL đầy đủ, có thể để trống):",old?.assignmentLink||"")??"";
+  const due=await pickDateTime('Chọn hạn nộp bài tập ngữ pháp',old?.dueDate||'',true);if(due===null)return;data.dueDate=due;
+ }
  if(!data.title){showToast('Tên không được để trống.');return;}
  try{if(old)await db.collection(collection).doc(old.id).update(data);else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection(collection).add(data);}showToast('Đã lưu dữ liệu.');}
  catch(e){showToast('Không lưu được: '+e.code);}
