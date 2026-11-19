@@ -149,7 +149,7 @@ body:not(.authenticated) .app{display:none}
 
   <section class="page" id="page-reports">
     <div class="toolbar"><div><h3>Báo cáo học tập</h3><div class="sub">Tổng hợp học sinh, bài tập và kết quả chấm</div></div><button class="primary" id="exportDemo">↓ Xuất CSV Excel</button></div>
-    <div class="stats"><div class="stat"><div class="stat-head">Học sinh</div><strong id="reportStudents">0</strong></div><div class="stat"><div class="stat-head">Bộ từ vựng</div><strong id="reportVocab">0</strong></div><div class="stat"><div class="stat-head">Bài tập</div><strong id="reportAssignments">0</strong></div><div class="stat"><div class="stat-head">Bài đã chấm</div><strong id="reportGraded">0</strong></div></div><div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Số bài chấm</th><th>Điểm trung bình</th><th>Tổng điểm</th></tr></thead><tbody id="reportBody"><tr><td colspan="4">Đang tổng hợp...</td></tr></tbody></table></div>
+    <div class="stats"><div class="stat"><div class="stat-head">Học sinh</div><strong id="reportStudents">0</strong></div><div class="stat"><div class="stat-head">Bộ từ vựng</div><strong id="reportVocab">0</strong></div><div class="stat"><div class="stat-head">Bài tập</div><strong id="reportAssignments">0</strong></div><div class="stat"><div class="stat-head">Bài đã chấm</div><strong id="reportGraded">0</strong></div></div><div class="card table-wrap"><table class="data-table"><thead><tr><th>Học sinh</th><th>Số bài chấm</th><th>Điểm trung bình</th><th>Tổng điểm</th><th>Hoàn thành gần nhất</th></tr></thead><tbody id="reportBody"><tr><td colspan="4">Đang tổng hợp...</td></tr></tbody></table></div>
   </section>
 </main>
 </div>
@@ -663,13 +663,15 @@ function renderAnalytics(){
  document.getElementById('reportGraded').textContent=graded.length;
  const rows=studentRecords.map(st=>{
   const list=graded.filter(x=>x.studentId===st.id);
+  const latestSubmission=submissionRecords.filter(x=>x.studentId===st.id).sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0))[0];
+  const latestAt=latestSubmission?.submittedAt||latestSubmission?.createdAt||null;
   const days=[...new Set([...scoreEventRecords.filter(e=>e.studentId===st.id&&Number(e.points)>0&&e.createdAt?.toDate).map(e=>localDayKey(e.createdAt.toDate())),...submissionRecords.filter(e=>e.studentId===st.id&&e.createdAt?.toDate).map(e=>localDayKey(e.createdAt.toDate()))])].sort().reverse();
   let streak=0;const now=new Date();now.setHours(0,0,0,0);
   if(days.length){const latest=days[0],today=localDayKey(now),yesterday=localDayKey(new Date(now.getTime()-86400000));if(latest===today||latest===yesterday){let cursor=new Date(latest+'T00:00:00');for(const d of days){if(d===cursor.toISOString().slice(0,10)){streak++;cursor.setDate(cursor.getDate()-1);}else break;}}}
-  return {name:st.name,count:list.length,avg:list.length?Math.round(list.reduce((a,x)=>a+x.score,0)/list.length):0,total:Number(st.pointsBalance??list.reduce((a,x)=>a+x.score,0)),streak};
+  return {name:st.name,count:list.length,avg:list.length?Math.round(list.reduce((a,x)=>a+x.score,0)/list.length):0,total:Number(st.pointsBalance??list.reduce((a,x)=>a+x.score,0)),streak,latestAt};
  });
  document.getElementById('scoresBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+' ⭐</td><td>'+x.count+'</td><td>'+x.streak+' ngày 🔥</td></tr>').join(''):'<tr><td colspan="4" class="empty">Chưa có học sinh.</td></tr>';
- document.getElementById('reportBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.count+'</td><td>'+(x.count?x.avg+'/100':'—')+'</td><td>'+x.total+'</td></tr>').join(''):'<tr><td colspan="4" class="empty">Chưa có dữ liệu.</td></tr>';
+ document.getElementById('reportBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.count+'</td><td>'+(x.count?x.avg+'/100':'—')+'</td><td>'+x.total+'</td><td>'+(x.latestAt?.toDate?x.latestAt.toDate().toLocaleString('vi-VN'):'Chưa nộp bài')+'</td></tr>').join(''):'<tr><td colspan="5" class="empty">Chưa có dữ liệu.</td></tr>';
  const recent=document.getElementById('dashRecentAssignments');recent.textContent='';
  const upcoming=assignmentRecords.slice().sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')).slice(0,4);
  if(!upcoming.length)recent.textContent='Chưa có bài tập nào được giao.';
