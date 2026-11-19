@@ -50,7 +50,7 @@ service cloud.firestore {
 
     match /students/{studentId} {
       function validStudentData() {
-        return request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streakFreezes','extraSpins','createdAt','updatedAt'])
+        return request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streak','streakFreezes','extraSpins','createdAt','updatedAt'])
           && request.resource.data.keys().hasAll(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','updatedAt'])
           && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
           && request.resource.data.email is string && request.resource.data.email.size() <= 160
@@ -68,7 +68,7 @@ service cloud.firestore {
         && request.resource.data.pointsBalance == 0
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if owns(resource.data)
-        && request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streakFreezes','extraSpins','badgeClaimId','createdAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streak','streakFreezes','extraSpins','badgeClaimId','createdAt','updatedAt'])
         && request.resource.data.keys().hasAll(['name','email','className','status','notes','teacherUid','updatedAt'])
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
         && request.resource.data.email is string && request.resource.data.email.size() <= 160
@@ -79,6 +79,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == resource.data.createdAt
         && ((!('authUid' in resource.data) && (!('authUid' in request.resource.data) || request.resource.data.authUid == '' || (existsAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)) && getAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)).data.studentId == studentId && getAfter(/databases/$(database)/documents/studentAccounts/$(request.resource.data.authUid)).data.teacherUid == request.auth.uid))) || (('authUid' in resource.data) && request.resource.data.authUid == resource.data.authUid))
         && (!('pointsBalance' in request.resource.data) || (request.resource.data.pointsBalance is number && request.resource.data.pointsBalance >= -1000000))
+        && (!('streak' in request.resource.data) || (request.resource.data.streak is int && request.resource.data.streak >= 0 && request.resource.data.streak <= 9999))
         && request.resource.data.updatedAt == request.time
         && (isTeacher() || (signedIn() && (request.auth.uid == studentId || resource.data.authUid == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pointsBalance','streakFreezes','extraSpins','badgeClaimId','updatedAt']) && ((request.resource.data.pointsBalance <= resource.data.pointsBalance && request.resource.data.streakFreezes >= resource.data.streakFreezes && request.resource.data.extraSpins >= resource.data.extraSpins && ((request.resource.data.pointsBalance == resource.data.pointsBalance - 20 && request.resource.data.streakFreezes == resource.data.streakFreezes + 1 && request.resource.data.extraSpins == resource.data.extraSpins) || (request.resource.data.pointsBalance == resource.data.pointsBalance - 300 && request.resource.data.streakFreezes == resource.data.streakFreezes && request.resource.data.extraSpins == resource.data.extraSpins) || (request.resource.data.pointsBalance == resource.data.pointsBalance && request.resource.data.streakFreezes == resource.data.streakFreezes && request.resource.data.extraSpins == resource.data.extraSpins + 1))) || (request.resource.data.pointsBalance > resource.data.pointsBalance && request.resource.data.pointsBalance - resource.data.pointsBalance <= 150 && existsAfter(/databases/$(database)/documents/badgeClaims/$(studentId + '_' + request.resource.data.badgeClaimId)) && getAfter(/databases/$(database)/documents/badgeClaims/$(studentId + '_' + request.resource.data.badgeClaimId)).data.points == request.resource.data.pointsBalance - resource.data.pointsBalance))));
       allow delete: if owns(resource.data);
