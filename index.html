@@ -358,6 +358,8 @@ function startStudentsListener(uid){
     });
     renderStudents();
     renderTeacherPointLedger();
+    renderTeacherVocabDaily();
+    reconcileVocabDailyPenalties();
     if(typeof renderAnalytics==='function')renderAnalytics();
   },error=>{
     studentsTableBody.innerHTML='<tr><td colspan="6">Không tải được hồ sơ. Hãy kiểm tra Firestore Rules đã được cập nhật.</td></tr>';
