@@ -68,7 +68,7 @@ service cloud.firestore {
         && request.resource.data.pointsBalance == 0
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if (owns(resource.data) || (signedIn() && (request.auth.uid == studentId || resource.data.authUid == request.auth.uid)))
-        && request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streak','streakFreezes','extraSpins','badgeClaimId','createdAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streak','streakFreezes','extraSpins','badgeClaimId','streakFreezePurchaseMonth','streakFreezeMonthlyCount','createdAt','updatedAt'])
         && request.resource.data.keys().hasAll(['name','email','className','status','notes','teacherUid','updatedAt'])
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
         && request.resource.data.email is string && request.resource.data.email.size() <= 160
@@ -84,11 +84,18 @@ service cloud.firestore {
         && (isTeacher() ||
           (signedIn()
             && (request.auth.uid == studentId || resource.data.authUid == request.auth.uid)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pointsBalance','streakFreezes','extraSpins','badgeClaimId','updatedAt'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pointsBalance','streakFreezes','extraSpins','badgeClaimId','streakFreezePurchaseMonth','streakFreezeMonthlyCount','updatedAt'])
             && (
               (request.resource.data.pointsBalance == resource.data.pointsBalance - 20
                 && request.resource.data.get('streakFreezes', 0) == resource.data.get('streakFreezes', 0) + 1
-                && request.resource.data.get('extraSpins', 0) == resource.data.get('extraSpins', 0))
+                && request.resource.data.get('extraSpins', 0) == resource.data.get('extraSpins', 0)
+                && request.resource.data.streakFreezePurchaseMonth is string
+                && request.resource.data.streakFreezeMonthlyCount is int
+                && request.resource.data.streakFreezeMonthlyCount <= 3
+                && ((request.resource.data.streakFreezePurchaseMonth == resource.data.get('streakFreezePurchaseMonth', '')
+                    && request.resource.data.streakFreezeMonthlyCount == resource.data.get('streakFreezeMonthlyCount', 0) + 1)
+                  || (request.resource.data.streakFreezePurchaseMonth != resource.data.get('streakFreezePurchaseMonth', '')
+                    && request.resource.data.streakFreezeMonthlyCount == 1)))
               ||
               (request.resource.data.pointsBalance == resource.data.pointsBalance - 300
                 && request.resource.data.get('streakFreezes', 0) == resource.data.get('streakFreezes', 0)
