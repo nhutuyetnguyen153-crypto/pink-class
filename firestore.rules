@@ -132,17 +132,13 @@ service cloud.firestore {
                ||
                (request.resource.data.pointsBalance == resource.data.pointsBalance + 30
                  && request.resource.data.reflectionRewardSubmissionId is string
+                 && request.resource.data.reflectionRewardSubmissionId != resource.data.get('reflectionRewardSubmissionId', '')
                  && existsAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId))
                  && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.studentId == studentId
-                 && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.studentUid == request.auth.uid
-                 && get(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.reflectionRewardClaimed == false
                  && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.reflectionRewardClaimed == true
-                 && request.resource.data.reflectionRewardSubmissionId != resource.data.get('reflectionRewardSubmissionId', '')
                  && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.reflectionText is string
-                 && getAfter(/databases/$(database)/documents/submissions/$(request.resource.data.reflectionRewardSubmissionId)).data.reflectionText.size() >= 10
-                 && existsAfter(/databases/$(database)/documents/scoreEvents/$('reflection-' + request.resource.data.reflectionRewardSubmissionId))
-                 && getAfter(/databases/$(database)/documents/scoreEvents/$('reflection-' + request.resource.data.reflectionRewardSubmissionId)).data.points == 30
-                 && getAfter(/databases/$(database)/documents/scoreEvents/$('reflection-' + request.resource.data.reflectionRewardSubmissionId)).data.studentId == studentId)
+                 && existsAfter(/databases/$(database)/documents/scoreEvents/$( 'reflection-' + request.resource.data.reflectionRewardSubmissionId))
+                 && getAfter(/databases/$(database)/documents/scoreEvents/$( 'reflection-' + request.resource.data.reflectionRewardSubmissionId)).data.points == 30)
                ||
                (request.resource.data.pointsBalance > resource.data.pointsBalance
                  && request.resource.data.pointsBalance - resource.data.pointsBalance <= 20000
@@ -314,23 +310,27 @@ service cloud.firestore {
         && request.resource.data.score == null
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time);
-      allow update: if owns(resource.data) && owns(request.resource.data)
+      allow update: if (owns(resource.data) && owns(request.resource.data)
         && request.resource.data.studentId == resource.data.studentId
         && request.resource.data.assignmentId == resource.data.assignmentId
         && (request.resource.data.imageUrl == resource.data.imageUrl || (request.resource.data.imageUrl == '' && resource.data.createdAt is timestamp && resource.data.createdAt <= request.time - duration.value(7, 'd')))
         && request.resource.data.updatedAt == request.time
-        && (request.resource.data.score == null || (request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score <= 100));
-      allow update: if studentOwns(request.auth.uid)
-        && resource.data.studentUid == request.auth.uid
-        && resource.data.status == 'graded' && resource.data.score is number
-        && resource.data.get('reflectionRewardClaimed', false) == false
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reflectionText','reflectionSubmittedAt','reflectionRewardClaimed','updatedAt'])
-        && request.resource.data.reflectionText is string && request.resource.data.reflectionText.size() >= 10 && request.resource.data.reflectionText.size() <= 3000
-        && request.resource.data.reflectionSubmittedAt == request.time && request.resource.data.reflectionRewardClaimed == true
-        && request.resource.data.updatedAt == request.time
-        && existsAfter(/databases/$(database)/documents/scoreEvents/$('reflection-' + docId))
-        && getAfter(/databases/$(database)/documents/scoreEvents/$('reflection-' + docId)).data.points == 30
-        && getAfter(/databases/$(database)/documents/scoreEvents/$('reflection-' + docId)).data.studentId == resource.data.studentId;
+        && (request.resource.data.score == null || (request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score <= 100)))
+        || (signedIn() && studentOwns(request.auth.uid)
+          && resource.data.studentUid == request.auth.uid
+          && resource.data.status == 'graded' && resource.data.score is number
+          && resource.data.get('reflectionRewardClaimed', false) == false
+          && request.resource.data.reflectionRewardClaimed == true
+          && request.resource.data.reflectionText is string
+          && request.resource.data.reflectionText.size() >= 10
+          && request.resource.data.reflectionText.size() <= 3000
+          && request.resource.data.reflectionSubmittedAt == request.time
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reflectionText','reflectionSubmittedAt','reflectionRewardClaimed','updatedAt'])
+          && getAfter(/databases/$(database)/documents/students/$(resource.data.studentId)).data.pointsBalance == get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.pointsBalance + 30
+          && getAfter(/databases/$(database)/documents/students/$(resource.data.studentId)).data.reflectionRewardSubmissionId == docId
+          && existsAfter(/databases/$(database)/documents/scoreEvents/$( 'reflection-' + docId))
+          && getAfter(/databases/$(database)/documents/scoreEvents/$( 'reflection-' + docId)).data.points == 30);
       allow delete: if owns(resource.data);
     }
     match /studentRequests/{requestId} {
@@ -481,8 +481,8 @@ service cloud.firestore {
             || request.resource.data.submissionId.matches('^avatar-.*
           && request.resource.data.points is number
           && request.resource.data.points >= -300
-          && ((request.resource.data.submissionId.matches('^goal-bonus-.*$') && request.resource.data.points <= 20000)
-            || (!request.resource.data.submissionId.matches('^goal-bonus-.*
+          && ((request.resource.data.submissionId.matches('^goal-bonus-.*
+            || (!request.resource.data.submissionId.matches('^goal-bonus-.*$') && request.resource.data.points <= 150))
           && request.resource.data.createdAt == request.time
           && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance
             == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance + request.resource.data.points);
@@ -569,7 +569,7 @@ service cloud.firestore {
   }
 }
 )
-            || request.resource.data.submissionId.matches('^reflection-.*
+             || request.resource.data.submissionId.matches('^reflection-.*
           && request.resource.data.points is number
           && request.resource.data.points >= -300
           && ((request.resource.data.submissionId.matches('^goal-bonus-.*$') && request.resource.data.points <= 20000)
@@ -749,8 +749,9 @@ service cloud.firestore {
     match /{document=**} { allow read, write: if false; }
   }
 }
-) && request.resource.data.points <= 150))
-          && (!request.resource.data.submissionId.matches('^reflection-.*
+) && request.resource.data.points <= 20000)
+             || (request.resource.data.submissionId.matches('^reflection-.*
+            || (!request.resource.data.submissionId.matches('^goal-bonus-.*$') && request.resource.data.points <= 150))
           && request.resource.data.createdAt == request.time
           && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance
             == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance + request.resource.data.points);
@@ -837,7 +838,7 @@ service cloud.firestore {
   }
 }
 )
-            || request.resource.data.submissionId.matches('^reflection-.*
+             || request.resource.data.submissionId.matches('^reflection-.*
           && request.resource.data.points is number
           && request.resource.data.points >= -300
           && ((request.resource.data.submissionId.matches('^goal-bonus-.*$') && request.resource.data.points <= 20000)
@@ -1017,7 +1018,9 @@ service cloud.firestore {
     match /{document=**} { allow read, write: if false; }
   }
 }
-) || request.resource.data.points == 30)
+) && request.resource.data.points == 30
+               && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.reflectionRewardSubmissionId is string)
+            || (!request.resource.data.submissionId.matches('^goal-bonus-.*$') && request.resource.data.points <= 150))
           && request.resource.data.createdAt == request.time
           && getAfter(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance
             == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.pointsBalance + request.resource.data.points);
@@ -1104,7 +1107,7 @@ service cloud.firestore {
   }
 }
 )
-            || request.resource.data.submissionId.matches('^reflection-.*
+             || request.resource.data.submissionId.matches('^reflection-.*
           && request.resource.data.points is number
           && request.resource.data.points >= -300
           && ((request.resource.data.submissionId.matches('^goal-bonus-.*$') && request.resource.data.points <= 20000)
