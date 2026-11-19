@@ -387,7 +387,11 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /vocabDaily/{dailyId} {
-      allow get: if signedIn() && dailyId.matches('^' + request.auth.uid + '_.+') || owns(resource.data) || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow get: if (signedIn() && dailyId.matches('^' + request.auth.uid + '_.+'))
+        || (signedIn() && exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid))
+          && dailyId.matches('^' + get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId + '_.+'))
+        || owns(resource.data)
+        || (signedIn() && resource.data.studentUid == request.auth.uid);
       allow list: if owns(resource.data) || (signedIn() && resource.data.studentUid == request.auth.uid);
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','setId','setTitle','dayOffset','dayKey','imageUrl','completed','points','submittedAt','createdAt'])
