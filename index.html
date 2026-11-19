@@ -338,6 +338,7 @@ function startStudentsListener(uid){
       const bt=b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0;return bt-at;
     });
     renderStudents();
+    renderTeacherPointLedger();
     if(typeof renderAnalytics==='function')renderAnalytics();
   },error=>{
     studentsTableBody.innerHTML='<tr><td colspan="6">Không tải được hồ sơ. Hãy kiểm tra Firestore Rules đã được cập nhật.</td></tr>';
