@@ -68,7 +68,7 @@ service cloud.firestore {
         && request.resource.data.pointsBalance == 0
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
       allow update: if (owns(resource.data) || (signedIn() && (request.auth.uid == studentId || resource.data.authUid == request.auth.uid)))
-        && request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streak','streakFreezes','extraSpins','badgeClaimId','streakFreezePurchaseMonth','streakFreezeMonthlyCount','createdAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['name','email','className','status','notes','teacherUid','authUid','pointsBalance','streak','streakFreezes','extraSpins','badgeClaimId','streakFreezePurchaseMonth','streakFreezeMonthlyCount','goalBonusId','vocabDailyClaimId','createdAt','updatedAt'])
         && request.resource.data.keys().hasAll(['name','email','className','status','notes','teacherUid','updatedAt'])
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
         && request.resource.data.email is string && request.resource.data.email.size() <= 160
@@ -84,7 +84,7 @@ service cloud.firestore {
         && (isTeacher() ||
           (signedIn()
             && (request.auth.uid == studentId || resource.data.authUid == request.auth.uid)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pointsBalance','streakFreezes','extraSpins','badgeClaimId','streakFreezePurchaseMonth','streakFreezeMonthlyCount','updatedAt'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pointsBalance','streakFreezes','extraSpins','badgeClaimId','streakFreezePurchaseMonth','streakFreezeMonthlyCount','goalBonusId','vocabDailyClaimId','updatedAt'])
             && (
               (request.resource.data.pointsBalance == resource.data.pointsBalance - 20
                 && request.resource.data.get('streakFreezes', 0) == resource.data.get('streakFreezes', 0) + 1
@@ -111,6 +111,23 @@ service cloud.firestore {
                 && request.resource.data.pointsBalance - resource.data.pointsBalance <= 150
                 && existsAfter(/databases/$(database)/documents/badgeClaims/$(studentId + '_' + request.resource.data.badgeClaimId))
                 && getAfter(/databases/$(database)/documents/badgeClaims/$(studentId + '_' + request.resource.data.badgeClaimId)).data.points == request.resource.data.pointsBalance - resource.data.pointsBalance)
+               ||
+               (request.resource.data.pointsBalance == resource.data.pointsBalance + 10
+                 && request.resource.data.vocabDailyClaimId is string
+                 && existsAfter(/databases/$(database)/documents/vocabDaily/$(request.resource.data.vocabDailyClaimId))
+                 && getAfter(/databases/$(database)/documents/vocabDaily/$(request.resource.data.vocabDailyClaimId)).data.studentId == studentId
+                 && getAfter(/databases/$(database)/documents/vocabDaily/$(request.resource.data.vocabDailyClaimId)).data.points == 10
+                 && existsAfter(/databases/$(database)/documents/scoreEvents/$( 'vocab-day-' + request.resource.data.vocabDailyClaimId))
+                 && getAfter(/databases/$(database)/documents/scoreEvents/$( 'vocab-day-' + request.resource.data.vocabDailyClaimId)).data.points == 10)
+               ||
+               (request.resource.data.pointsBalance > resource.data.pointsBalance
+                 && request.resource.data.pointsBalance - resource.data.pointsBalance <= 150
+                 && request.resource.data.goalBonusId is string
+                 && existsAfter(/databases/$(database)/documents/learningGoals/$(request.resource.data.goalBonusId))
+                 && getAfter(/databases/$(database)/documents/learningGoals/$(request.resource.data.goalBonusId)).data.status == 'completed'
+                 && getAfter(/databases/$(database)/documents/learningGoals/$(request.resource.data.goalBonusId)).data.bonusPoints == request.resource.data.pointsBalance - resource.data.pointsBalance
+                 && existsAfter(/databases/$(database)/documents/scoreEvents/$( 'goal-bonus-' + request.resource.data.goalBonusId))
+                 && getAfter(/databases/$(database)/documents/scoreEvents/$( 'goal-bonus-' + request.resource.data.goalBonusId)).data.points == request.resource.data.pointsBalance - resource.data.pointsBalance)
             )
           )
         );
@@ -325,6 +342,76 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','teacherNote','processedAt','processedBy']);
       allow delete: if false;
     }
+    match /learningGoals/{goalId} {
+      allow read: if owns(resource.data) || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn() && studentOwns(request.auth.uid)
+        && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','period','goalPoints','startAt','endAt','status','bonusPoints','createdAt'])
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentId == (exists(/databases/$(database)/documents/students/$(request.auth.uid)) ? request.auth.uid : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId)
+        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
+        && request.resource.data.studentName == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.name
+        && request.resource.data.period in ['week','month']
+        && request.resource.data.goalPoints is int && request.resource.data.goalPoints >= 10 && request.resource.data.goalPoints <= 750
+        && request.resource.data.startAt is string && request.resource.data.endAt is string
+        && request.resource.data.status == 'active' && request.resource.data.bonusPoints == 0
+        && request.resource.data.createdAt == request.time;
+      allow update: if signedIn() && resource.data.studentUid == request.auth.uid
+        && resource.data.status == 'active'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','bonusPoints','completedAt','updatedAt'])
+        && request.resource.data.status in ['completed','expired']
+        && request.resource.data.updatedAt == request.time
+        && (request.resource.data.status == 'expired'
+          || (request.resource.data.bonusPoints is int && request.resource.data.bonusPoints > 0 && request.resource.data.bonusPoints <= 150
+            && existsAfter(/databases/$(database)/documents/scoreEvents/$( 'goal-bonus-' + goalId))
+            && getAfter(/databases/$(database)/documents/scoreEvents/$( 'goal-bonus-' + goalId)).data.points == request.resource.data.bonusPoints));
+      allow delete: if false;
+    }
+    match /pointExchangeRequests/{requestId} {
+      allow read: if (isTeacher() && resource.data.teacherUid == request.auth.uid)
+        || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn() && studentOwns(request.auth.uid)
+        && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','pointsAmount','reason','status','createdAt'])
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentId == (exists(/databases/$(database)/documents/students/$(request.auth.uid)) ? request.auth.uid : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId)
+        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
+        && request.resource.data.studentName == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.name
+        && request.resource.data.pointsAmount is int && request.resource.data.pointsAmount > 0
+        && request.resource.data.reason is string && request.resource.data.reason.size() > 0 && request.resource.data.reason.size() <= 300
+        && request.resource.data.status == 'pending' && request.resource.data.createdAt == request.time;
+      allow update: if isTeacher() && resource.data.teacherUid == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.status in ['approved','rejected']
+        && request.resource.data.processedBy == request.auth.uid
+        && request.resource.data.processedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','processedAt','processedBy']);
+      allow delete: if false;
+    }
+    match /vocabDaily/{dailyId} {
+      allow read: if owns(resource.data) || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if signedIn() && studentOwns(request.auth.uid)
+        && request.resource.data.keys().hasOnly(['teacherUid','studentUid','studentId','studentName','setId','setTitle','dayOffset','dayKey','imageUrl','completed','points','submittedAt','createdAt'])
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentId == (exists(/databases/$(database)/documents/students/$(request.auth.uid)) ? request.auth.uid : get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId)
+        && request.resource.data.teacherUid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid
+        && exists(/databases/$(database)/documents/vocabularySets/$(request.resource.data.setId))
+        && get(/databases/$(database)/documents/vocabularySets/$(request.resource.data.setId)).data.teacherUid == request.resource.data.teacherUid
+        && request.resource.data.dayOffset in [1,3,5,7,14,21,30]
+        && request.resource.data.dayKey is string
+        && request.resource.data.imageUrl is string && request.resource.data.imageUrl.size() <= 650000
+        && request.resource.data.completed == true && request.resource.data.points == 10
+        && request.resource.data.submittedAt == request.time && request.resource.data.createdAt == request.time;
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && request.resource.data.studentId == resource.data.studentId
+        && request.resource.data.setId == resource.data.setId
+        && request.resource.data.dayKey == resource.data.dayKey
+        && request.resource.data.completed == resource.data.completed
+        && request.resource.data.points == resource.data.points
+        && request.resource.data.imageUrl == ''
+        && request.resource.data.imageDeletedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['imageUrl','imageDeletedAt','updatedAt']);
+      allow delete: if false;
+    }
     match /scoreEvents/{docId} {
       allow read: if owns(resource.data) || (signedIn() && (resource.data.studentId == request.auth.uid || (exists(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)) && get(/databases/$(database)/documents/studentAccounts/$(request.auth.uid)).data.studentId == resource.data.studentId)));
       allow create: if (isTeacher() && owns(request.resource.data)
@@ -344,7 +431,9 @@ service cloud.firestore {
           && request.resource.data.submissionId is string
           && (request.resource.data.submissionId.matches('^wheel-.*$')
             || request.resource.data.submissionId.matches('^badge-.*$')
-            || request.resource.data.submissionId.matches('^streak-freeze-.*$'))
+            || request.resource.data.submissionId.matches('^streak-freeze-.*$')
+            || request.resource.data.submissionId.matches('^vocab-day-.*$')
+            || request.resource.data.submissionId.matches('^goal-bonus-.*$'))
           && request.resource.data.points is number
           && request.resource.data.points >= -300 && request.resource.data.points <= 150
           && request.resource.data.createdAt == request.time
