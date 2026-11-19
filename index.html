@@ -561,9 +561,9 @@ function renderStudentAssignments(list,profile){
     try{
      btn.disabled=true;btn.textContent="Đang xử lý ảnh...";
      const imageUrl=await compressRewardImage(file);
-     const deadline=deadlineDate(item.dueDate);const isLate=!!deadline&&Date.now()>deadline.getTime();
-     await db.collection("submissions").add({teacherUid:profile.teacherUid,studentId:activeStudentDocId,studentName:profile.name||"Học sinh",studentUid:activeStudentUid,assignmentId:item.id,assignmentTitle:item.title||"Bài tập",taskType:"grammar",imageUrl,note:"",status:"submitted",isLate,submittedAt:firebase.firestore.FieldValue.serverTimestamp(),score:null,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-     showToast("Đã nộp bài thành công.");
+     const deadline=deadlineDate(item.dueDate),isLate=!!deadline&&Date.now()>deadline.getTime(),submissionRef=db.collection("submissions").doc(),studentRef=db.collection("students").doc(activeStudentDocId),lateEventRef=db.collection("scoreEvents").doc("late-grammar-"+item.id+"-"+activeStudentDocId);
+     await db.runTransaction(async tx=>{const [studentSnap,lateEventSnap]=await Promise.all([tx.get(studentRef),tx.get(lateEventRef)]);if(!studentSnap.exists)throw new Error("student_missing");tx.set(submissionRef,{teacherUid:profile.teacherUid,studentId:activeStudentDocId,studentName:profile.name||"Học sinh",studentUid:activeStudentUid,assignmentId:item.id,assignmentTitle:item.title||"Bài tập",taskType:"grammar",imageUrl,note:"",status:"submitted",isLate,latePenaltyApplied:isLate,submittedAt:firebase.firestore.FieldValue.serverTimestamp(),score:null,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(isLate&&!lateEventSnap.exists){tx.update(studentRef,{pointsBalance:Number(studentSnap.data().pointsBalance||0)-20,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});tx.set(lateEventRef,{teacherUid:profile.teacherUid,studentId:activeStudentDocId,submissionId:submissionRef.id,points:-20,note:"Trừ 20 điểm do nộp bài ngữ pháp quá hạn: "+(item.title||"Bài tập"),createdAt:firebase.firestore.FieldValue.serverTimestamp()});}});
+     showToast(isLate?"Đã nộp bài. Hệ thống đã trừ 20 điểm vì nộp trễ.":"Đã nộp bài thành công.");
     }catch(e){showToast("Không nộp được bài: "+(e.code||e.message));}
     finally{btn.disabled=false;btn.textContent="Gửi ảnh bài làm";}
    };picker.click();
